@@ -4,7 +4,7 @@ import os
 import re
 np.set_printoptions(threshold=np.inf)
 
-folder = "/Users/rai009/Documents/qual_fresh/AgWeatherNet/Paolo"
+folder = "./data/AWN"
 
 m = 96 * 31
 
