@@ -38,8 +38,9 @@ features = [
 ]
 
 
-X = []
+index = 0
 for file in os.listdir(folder):
+    X = []
     if file.endswith('.csv'):
         try:
             df = pd.read_csv(f"{folder}/{file}") 
@@ -53,13 +54,14 @@ for file in os.listdir(folder):
                     count = 0
                 else:
                     x.append(df.iloc[i][features])
+            index += 1
         except:
             continue
-X = np.array(X)
-print(f"X: {X.shape}")
-out_folder = "./data/AWN"
-if not os.path.isdir(out_folder):
-    os.makedirs(out_folder)
-np.save(f"{out_folder}/X_train.npy", X)
+    X = np.array(X)
+    print(f"X: {X.shape}")
+    out_folder = "./data/AWN/train"
+    if not os.path.isdir(out_folder):
+        os.makedirs(out_folder)
+    np.save(f"{out_folder}/X_train_{index}.npy", X)
 
             
