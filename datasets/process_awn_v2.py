@@ -54,6 +54,14 @@ for file in os.listdir(folder):
                     count = 0
                 else:
                     x.append(df.iloc[i][features])
+            if len(x) < m:
+                adds = m - len(x)
+                
+                for i in range(len(adds)):
+                    y = []
+                    for j in range(len(x[0])):
+                        y.append(np.nan)
+                    x.append(y)
             index += 1
         except:
             continue
