@@ -6,7 +6,7 @@ np.set_printoptions(threshold=np.inf)
 
 folder = "./data/AWN"
 
-m = 96 * 31
+m = 96 * 7
 
 features = [
     # 'TSTAMP_PST', 
@@ -39,8 +39,9 @@ features = [
 
 
 index = 0
+X = []
 for file in os.listdir(folder):
-    X = []
+    
     if file.endswith('.csv'):
         try:
             df = pd.read_csv(f"{folder}/{file}") 
@@ -65,11 +66,11 @@ for file in os.listdir(folder):
             index += 1
         except:
             continue
-    X = np.array(X)
-    print(f"X: {X.shape}")
-    out_folder = "./data/AWN/train"
-    if not os.path.isdir(out_folder):
-        os.makedirs(out_folder)
-    np.save(f"{out_folder}/X_train_{index}.npy", X)
+X = np.array(X)
+print(f"X: {X.shape}")
+out_folder = "./data/AWN/train"
+if not os.path.isdir(out_folder):
+    os.makedirs(out_folder)
+np.save(f"{out_folder}/X_train_{index}.npy", X)
 
             
