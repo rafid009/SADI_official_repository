@@ -71,6 +71,6 @@ print(f"X: {X.shape}")
 out_folder = "./data/AWN/train"
 if not os.path.isdir(out_folder):
     os.makedirs(out_folder)
-np.save(f"{out_folder}/X_train_{index}.npy", X)
+np.save(f"{out_folder}/X_train_all.npy", X)
 
             
