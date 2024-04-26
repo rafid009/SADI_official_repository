@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import os
 import re
+import dask.array as da
 np.set_printoptions(threshold=np.inf)
 
 folder = "./data/AWN"
@@ -66,7 +67,7 @@ for file in os.listdir(folder):
             index += 1
         except:
             continue
-X = np.array(X)
+X = da.array(X)
 print(f"X: {X.shape}")
 out_folder = "./data/AWN/train"
 if not os.path.isdir(out_folder):
