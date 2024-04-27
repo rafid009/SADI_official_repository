@@ -51,7 +51,7 @@ for file in os.listdir(folder):
             for i in range(len(df)):
                 count+=1
                 if count == m:
-                    X.append(x)
+                    X.append(np.stack(x))
                     x = []
                     count = 0
                 else:
@@ -67,7 +67,7 @@ for file in os.listdir(folder):
             index += 1
         except:
             continue
-X = da.array(X)
+X = da.stack(X)
 print(f"X: {X.shape}")
 out_folder = "./data/AWN/train"
 if not os.path.isdir(out_folder):
