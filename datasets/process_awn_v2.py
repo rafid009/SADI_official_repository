@@ -47,7 +47,34 @@ for file in os.listdir(folder):
     
     if file.endswith('.csv'):
         try:
-            df = pd.read_csv(f"{folder}/{file}") 
+            df = pd.read_csv(f"{folder}/{file}", dtype={
+                'TSTAMP_PST': np.datetime64, 
+                ' UNIT_ID': int, 
+                ' STATION_NAME': str, 
+                ' LATITUDE': np.float32, 
+                ' LONGITUDE': np.float32, 
+                ' ELEVATION_FEET': np.float32, 
+                ' AIR_TEMP_F': np.float32, 
+                ' SECOND_AIR_TEMP_F': np.float32, 
+                'AIR_TEMP_10M_F': np.float32, 
+                ' RELATIVE_HUMIDITY_%': np.float32, 
+                ' DEWPOINT_F': np.float32, 
+                ' LEAF_WETNESS': np.float32, 
+                ' PRECIP_INCHES': np.float32, 
+                ' SECOND_PRECIP_INCHES': np.float32, 
+                ' WIND_DIRECTION_2M_DEG': np.float32, 
+                ' WIND_SPEED_2M_MPH': np.float32, 
+                ' WIND_SPEED_MAX_2M_MPH': np.float32, 
+                ' WIND_DIRECTION_10M_DEG': np.float32, 
+                ' WIND_SPEED_10M_MPH': np.float32, 
+                ' WIND_SPEED_MAX_10M_MPH': np.float32, 
+                ' SOLAR_RAD_WM2': np.float32, 
+                ' SOIL_TEMP_2_IN_DEGREES_F': np.float32, 
+                '  SOIL_TEMP_8_IN_DEGREES_F': np.float32, 
+                '  SOIL_WP_2_IN_KPA': np.float32, 
+                '  SOIL_WP_8_IN_KPA': np.float32, 
+                '  SOIL_MOIS_8_IN_%': np.float32
+            }) 
             x = []
             count = 0
             for i in range(len(df)):
@@ -67,7 +94,7 @@ for file in os.listdir(folder):
                         y.append(np.nan)
                     x.append(y)
             index += 1
-            if index % 60 == 0:
+            if index % 30 == 0:
                 X = da.stack(X)
                 print(f"X: {X.shape}")
                 
