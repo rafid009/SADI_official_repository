@@ -94,8 +94,8 @@ for file in os.listdir(folder):
                         y.append(np.nan)
                     x.append(y)
             index += 1
-            if index % 30 == 0:
-                X = da.stack(X)
+            if index % 60 == 0:
+                X = da.array(X)
                 print(f"X: {X.shape}")
                 
                 if not os.path.isdir(out_folder):
@@ -106,7 +106,7 @@ for file in os.listdir(folder):
                 x = []
         except:
             continue
-X = da.stack(X)
+X = da.array(X)
 print(f"X: {X.shape}")
 if not os.path.isdir(out_folder):
     os.makedirs(out_folder)
