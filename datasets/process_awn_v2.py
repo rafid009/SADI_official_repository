@@ -53,7 +53,7 @@ for file in os.listdir(folder):
             for i in range(len(df)):
                 count+=1
                 if count == m:
-                    X.append(da.stack(x))
+                    X.append(np.stack(x))
                     x = []
                     count = 0
                 else:
