@@ -48,8 +48,10 @@ for file in os.listdir(folder):
     if file.endswith('.csv'):
         print(f"file: {file}")
         df = pd.read_csv(f"{folder}/{file}")
-        df = pd.to_numeric(df[features], errors='coerce')
-        df = df[features].astype('float')
+        
+        for feat in features:
+            df[feat] = pd.to_numeric(df[feat], errors='coerce')
+            df[feat] = df[feat].astype('float')
         # , dtype={
         #     'TSTAMP_PST': str, 
         #     ' UNIT_ID': int, 
