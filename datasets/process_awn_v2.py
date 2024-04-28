@@ -93,7 +93,7 @@ for file in os.listdir(folder):
         if len(x) < m:
             adds = m - len(x)
             
-            for i in range(len(adds)):
+            for i in range(adds):
                 y = []
                 for j in range(len(x[0])):
                     y.append(np.nan)
