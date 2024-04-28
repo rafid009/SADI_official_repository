@@ -85,7 +85,7 @@ for file in os.listdir(folder):
         for i in range(len(df)):
             count+=1
             if count == m:
-                X.append(np.stack(x))
+                X.append(np.array(x))
                 x = []
                 count = 0
             else:
@@ -98,11 +98,11 @@ for file in os.listdir(folder):
                 for j in range(len(x[0])):
                     y.append(np.nan)
                 x.append(y)
-            X.append(np.stack(x))
+            X.append(np.array(x))
             x = []
             count = 0
         index += 1
-        if index % 60 == 0:
+        if index % 30 == 0:
             X = np.array(X)
             print(f"X: {X.shape}")
             
@@ -111,7 +111,7 @@ for file in os.listdir(folder):
             np.save(f"{out_folder}/X_train_{count_idx}.npy", X)
             count_idx += 1
             X = []
-if index % 60 != 0:
+if index % 30 != 0:
     X = np.array(X)
     print(f"X: {X.shape}")
     if not os.path.isdir(out_folder):
