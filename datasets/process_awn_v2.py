@@ -48,7 +48,7 @@ for file in os.listdir(folder):
     if file.endswith('.csv'):
 
         df = pd.read_csv(f"{folder}/{file}", dtype={
-            'TSTAMP_PST': np.datetime64, 
+            'TSTAMP_PST': str, 
             ' UNIT_ID': int, 
             ' STATION_NAME': str, 
             ' LATITUDE': np.float32, 
