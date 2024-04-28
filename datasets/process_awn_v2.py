@@ -47,34 +47,37 @@ for file in os.listdir(folder):
     
     if file.endswith('.csv'):
         print(f"file: {file}")
-        df = pd.read_csv(f"{folder}/{file}", dtype={
-            'TSTAMP_PST': str, 
-            ' UNIT_ID': int, 
-            ' STATION_NAME': str, 
-            ' LATITUDE': float, 
-            ' LONGITUDE': float, 
-            ' ELEVATION_FEET': float, 
-            ' AIR_TEMP_F': float, 
-            ' SECOND_AIR_TEMP_F': float, 
-            'AIR_TEMP_10M_F': float, 
-            ' RELATIVE_HUMIDITY_%': float, 
-            ' DEWPOINT_F': float, 
-            ' LEAF_WETNESS': float, 
-            ' PRECIP_INCHES': float, 
-            ' SECOND_PRECIP_INCHES': float, 
-            ' WIND_DIRECTION_2M_DEG': float, 
-            ' WIND_SPEED_2M_MPH': float, 
-            ' WIND_SPEED_MAX_2M_MPH': float, 
-            ' WIND_DIRECTION_10M_DEG': float, 
-            ' WIND_SPEED_10M_MPH': float, 
-            ' WIND_SPEED_MAX_10M_MPH': float, 
-            ' SOLAR_RAD_WM2': float, 
-            ' SOIL_TEMP_2_IN_DEGREES_F': float, 
-            '  SOIL_TEMP_8_IN_DEGREES_F': float, 
-            '  SOIL_WP_2_IN_KPA': float, 
-            '  SOIL_WP_8_IN_KPA': float, 
-            '  SOIL_MOIS_8_IN_%': float
-        }) 
+        df = pd.read_csv(f"{folder}/{file}")
+        df = pd.to_numeric(df[features], errors='coerce')
+        df = df[features].astype('float')
+        # , dtype={
+        #     'TSTAMP_PST': str, 
+        #     ' UNIT_ID': int, 
+        #     ' STATION_NAME': str, 
+        #     ' LATITUDE': Sparse[float], 
+        #     ' LONGITUDE': float, 
+        #     ' ELEVATION_FEET': float, 
+        #     ' AIR_TEMP_F': float, 
+        #     ' SECOND_AIR_TEMP_F': float, 
+        #     'AIR_TEMP_10M_F': float, 
+        #     ' RELATIVE_HUMIDITY_%': float, 
+        #     ' DEWPOINT_F': float, 
+        #     ' LEAF_WETNESS': float, 
+        #     ' PRECIP_INCHES': float, 
+        #     ' SECOND_PRECIP_INCHES': float, 
+        #     ' WIND_DIRECTION_2M_DEG': float, 
+        #     ' WIND_SPEED_2M_MPH': float, 
+        #     ' WIND_SPEED_MAX_2M_MPH': float, 
+        #     ' WIND_DIRECTION_10M_DEG': float, 
+        #     ' WIND_SPEED_10M_MPH': float, 
+        #     ' WIND_SPEED_MAX_10M_MPH': float, 
+        #     ' SOLAR_RAD_WM2': float, 
+        #     ' SOIL_TEMP_2_IN_DEGREES_F': float, 
+        #     '  SOIL_TEMP_8_IN_DEGREES_F': float, 
+        #     '  SOIL_WP_2_IN_KPA': float, 
+        #     '  SOIL_WP_8_IN_KPA': float, 
+        #     '  SOIL_MOIS_8_IN_%': float
+        # }) 
         x = []
         count = 0
         for i in range(len(df)):
