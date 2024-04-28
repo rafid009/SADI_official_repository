@@ -41,6 +41,8 @@ features = [
 
 index = 0
 X = []
+out_folder = "./data/AWN/train"
+count_idx = 0
 for file in os.listdir(folder):
     
     if file.endswith('.csv'):
@@ -51,7 +53,7 @@ for file in os.listdir(folder):
             for i in range(len(df)):
                 count+=1
                 if count == m:
-                    X.append(np.stack(x))
+                    X.append(da.stack(x))
                     x = []
                     count = 0
                 else:
@@ -65,13 +67,22 @@ for file in os.listdir(folder):
                         y.append(np.nan)
                     x.append(y)
             index += 1
+            if index % 60 == 0:
+                X = da.stack(X)
+                print(f"X: {X.shape}")
+                
+                if not os.path.isdir(out_folder):
+                    os.makedirs(out_folder)
+                np.save(f"{out_folder}/X_train_{count_idx}.npy", X)
+                count_idx += 1
+                X = []
+                x = []
         except:
             continue
 X = da.stack(X)
 print(f"X: {X.shape}")
-out_folder = "./data/AWN/train"
 if not os.path.isdir(out_folder):
     os.makedirs(out_folder)
-np.save(f"{out_folder}/X_train_all.npy", X)
+np.save(f"{out_folder}/X_train_{count_idx}.npy", X)
 
             
