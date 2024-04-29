@@ -113,7 +113,7 @@ for file in os.listdir(folder):
             count_idx += 1
             X = []
             gc.collect()
-if index % 20 != 0:
+if index % 10 != 0:
     X = np.array(X)
     print(f"X: {X.shape}")
     if not os.path.isdir(out_folder):
