@@ -109,7 +109,7 @@ for file in os.listdir(folder):
             
             if not os.path.isdir(out_folder):
                 os.makedirs(out_folder)
-            np.save(f"{out_folder}/X_train_{file}_{count_idx}.npy", X)
+            np.save(f"{out_folder}/X_train_{count_idx}.npy", X)
             count_idx += 1
             X = []
             gc.collect()
