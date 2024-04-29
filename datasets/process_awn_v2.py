@@ -103,7 +103,7 @@ for file in os.listdir(folder):
             x = []
             gc.collect()
         index += 1
-        if index % 20 == 0:
+        if index % 10 == 0:
             X = np.array(X)
             print(f"X: {X.shape}")
             
