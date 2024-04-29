@@ -1,8 +1,7 @@
 import pandas as pd
 import numpy as np
 import os
-import re
-import dask.array as da
+import gc
 np.set_printoptions(threshold=np.inf)
 
 folder = "./data/AWN"
@@ -89,6 +88,7 @@ for file in os.listdir(folder):
                 X.append(np.array(x))
                 x = []
                 count = 0
+                gc.collect()
             else:
                 x.append(df.iloc[i][features])
         if len(x) < m:
@@ -101,8 +101,9 @@ for file in os.listdir(folder):
                 x.append(y)
             X.append(np.array(x))
             x = []
+            gc.collect()
         index += 1
-        if index % 30 == 0:
+        if index % 20 == 0:
             X = np.array(X)
             print(f"X: {X.shape}")
             
@@ -111,7 +112,8 @@ for file in os.listdir(folder):
             np.save(f"{out_folder}/X_train_{count_idx}.npy", X)
             count_idx += 1
             X = []
-if index % 30 != 0:
+            gc.collect()
+if index % 20 != 0:
     X = np.array(X)
     print(f"X: {X.shape}")
     if not os.path.isdir(out_folder):
