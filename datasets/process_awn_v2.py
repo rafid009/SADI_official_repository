@@ -85,22 +85,23 @@ for file in os.listdir(folder):
         for i in range(len(df)):
             count+=1
             if count == m:
-                X.append(np.array(x))
+                xa = np.array(x)
+                print(f"xa: {xa.shape}")
+                X.append(xa)
                 x = []
                 count = 0
             else:
                 x.append(df.iloc[i][features])
         if len(x) < m:
             adds = m - len(x)
-            
+            print(f"len(x): {len(x)}, m={m}, adds: {adds}")
             for i in range(adds):
                 y = []
                 for j in range(len(x[0])):
                     y.append(np.nan)
                 x.append(y)
-            X.append(np.array(x))
-            x = []
-            count = 0
+            
+
         index += 1
         if index % 30 == 0:
             X = np.array(X)
