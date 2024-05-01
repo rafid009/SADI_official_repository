@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import os
 import gc
+import json
 np.set_printoptions(threshold=np.inf)
 
 folder = "./data/AWN"
@@ -37,10 +38,10 @@ features = [
     '  SOIL_MOIS_8_IN_%'
 ]
 
-
+file_dict = {}
 index = 0
 X = []
-out_folder = "./data/AWN/train"
+out_folder = "./data/AWN/train_single"
 count_idx = 0
 for file in os.listdir(folder):
     
@@ -51,34 +52,7 @@ for file in os.listdir(folder):
         for feat in features:
             df[feat] = pd.to_numeric(df[feat], errors='coerce')
             df[feat] = df[feat].astype('float')
-        # , dtype={
-        #     'TSTAMP_PST': str, 
-        #     ' UNIT_ID': int, 
-        #     ' STATION_NAME': str, 
-        #     ' LATITUDE': Sparse[float], 
-        #     ' LONGITUDE': float, 
-        #     ' ELEVATION_FEET': float, 
-        #     ' AIR_TEMP_F': float, 
-        #     ' SECOND_AIR_TEMP_F': float, 
-        #     'AIR_TEMP_10M_F': float, 
-        #     ' RELATIVE_HUMIDITY_%': float, 
-        #     ' DEWPOINT_F': float, 
-        #     ' LEAF_WETNESS': float, 
-        #     ' PRECIP_INCHES': float, 
-        #     ' SECOND_PRECIP_INCHES': float, 
-        #     ' WIND_DIRECTION_2M_DEG': float, 
-        #     ' WIND_SPEED_2M_MPH': float, 
-        #     ' WIND_SPEED_MAX_2M_MPH': float, 
-        #     ' WIND_DIRECTION_10M_DEG': float, 
-        #     ' WIND_SPEED_10M_MPH': float, 
-        #     ' WIND_SPEED_MAX_10M_MPH': float, 
-        #     ' SOLAR_RAD_WM2': float, 
-        #     ' SOIL_TEMP_2_IN_DEGREES_F': float, 
-        #     '  SOIL_TEMP_8_IN_DEGREES_F': float, 
-        #     '  SOIL_WP_2_IN_KPA': float, 
-        #     '  SOIL_WP_8_IN_KPA': float, 
-        #     '  SOIL_MOIS_8_IN_%': float
-        # }) 
+
         x = []
         count = 0
         for i in range(len(df)):
@@ -103,21 +77,16 @@ for file in os.listdir(folder):
             x = []
             gc.collect()
         index += 1
-        if index % 5 == 0:
-            X = np.array(X)
-            print(f"X: {X.shape}")
-            
-            if not os.path.isdir(out_folder):
-                os.makedirs(out_folder)
-            np.save(f"{out_folder}/X_train_{count_idx}.npy", X)
-            count_idx += 1
-            X = []
-            gc.collect()
-if index % 5 != 0:
-    X = np.array(X)
-    print(f"X: {X.shape}")
-    if not os.path.isdir(out_folder):
-        os.makedirs(out_folder)
-    np.save(f"{out_folder}/X_train_{count_idx}.npy", X)
 
+        X = np.array(X)
+        print(f"X: {X.shape}")
+        
+        if not os.path.isdir(out_folder):
+            os.makedirs(out_folder)
+        np.save(f"{out_folder}/X_train_{file}.npy", X)
+        file_dict[file] = f"X_train_{file}.npy"
+        X = []
+        gc.collect()
+with open(f"{out_folder}/station_map.json", "w") as outfile: 
+    json.dump(file_dict, outfile)
             
