@@ -5,7 +5,7 @@ import gc
 import json
 np.set_printoptions(threshold=np.inf)
 
-folder = "./data/AWN/tests/AgAid"
+folder = "./data/AWN/tests/AgAID"
 
 m = 96 * 7
 
