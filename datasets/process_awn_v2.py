@@ -47,7 +47,7 @@ features = [
     # ' ELEVATION_FEET', 
     'AIR_TEMP_F', 
     'SECOND_AIR_TEMP_F', 
-    'AIR_TEMP_10M_F', 
+    'AIR_TEMP_9M_F', 
     'RELATIVE_HUMIDITY_%', 
     'DEWPOINT_F', 
     'LEAF_WETNESS', 
@@ -70,7 +70,7 @@ features = [
 file_dict = {}
 index = 0
 X = []
-out_folder = "./data/AWN/test_single"
+out_folder = "./data/AWN/singles"
 count_idx = 0
 for file in os.listdir(folder):
     
@@ -112,10 +112,10 @@ for file in os.listdir(folder):
         
         if not os.path.isdir(out_folder):
             os.makedirs(out_folder)
-        np.save(f"{out_folder}/X_test_AWN_15_{file}.npy", X)
-        file_dict[file] = f"X_test_AWN_15_{file}.npy"
+        np.save(f"{out_folder}/X_AWN_15_{file}.npy", X)
+        file_dict[file] = f"X_AWN_15_{file}.npy"
         X = []
         gc.collect()
-with open(f"{out_folder}/test_station_map.json", "w") as outfile: 
+with open(f"{out_folder}/train_station_map.json", "w") as outfile: 
     json.dump(file_dict, outfile)
             
