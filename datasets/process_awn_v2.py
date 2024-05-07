@@ -5,7 +5,7 @@ import gc
 import json
 np.set_printoptions(threshold=np.inf)
 
-folder = "./data/AWN"
+folder = "./data/AWN/tests/AgAid"
 
 m = 96 * 7
 
@@ -41,7 +41,7 @@ features = [
 file_dict = {}
 index = 0
 X = []
-out_folder = "./data/AWN/train_single"
+out_folder = "./data/AWN/test_single"
 count_idx = 0
 for file in os.listdir(folder):
     
@@ -83,10 +83,10 @@ for file in os.listdir(folder):
         
         if not os.path.isdir(out_folder):
             os.makedirs(out_folder)
-        np.save(f"{out_folder}/X_train_{file}.npy", X)
-        file_dict[file] = f"X_train_{file}.npy"
+        np.save(f"{out_folder}/X_train_AWN_15_{file}.npy", X)
+        file_dict[file] = f"X_train_AWN_15_{file}.npy"
         X = []
         gc.collect()
-with open(f"{out_folder}/station_map.json", "w") as outfile: 
+with open(f"{out_folder}/test_station_map.json", "w") as outfile: 
     json.dump(file_dict, outfile)
             

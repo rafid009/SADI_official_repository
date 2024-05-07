@@ -29,12 +29,12 @@ common_config = {
         'res_connect_blocks': False,
         'is-fde-linear': False
     },
-    'name': 'skip_fde_1st_mask_pos_enc_loss_p_bm'
+    'name': 'fde_gta_wt_comb'
 }
 
 partial_bm_config = {
     'features': 2,
-    'length_range': (20, 20),
+    'length_range': (100, 100),
     'n_chunks': 2
 }
 
