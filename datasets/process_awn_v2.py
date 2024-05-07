@@ -112,8 +112,8 @@ for file in os.listdir(folder):
         
         if not os.path.isdir(out_folder):
             os.makedirs(out_folder)
-        np.save(f"{out_folder}/X_AWN_15_{file}.npy", X)
-        file_dict[file] = f"X_AWN_15_{file}.npy"
+        np.save(f"{out_folder}/X_{file}.npy", X)
+        file_dict[file] = f"X_{file}.npy"
         X = []
         gc.collect()
 with open(f"{out_folder}/train_station_map.json", "w") as outfile: 
