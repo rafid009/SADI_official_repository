@@ -72,7 +72,7 @@ n_features = len(given_features)
 noise = False
 filename = '330141.csv'
 
-train_loader, valid_loader = get_dataloader(n_steps, (filename, filename), batch_size=32, missing_ratio=0.2, seed=seed)
+train_loader, valid_loader = get_dataloader(n_steps, (filename, filename), batch_size=8, missing_ratio=0.2, seed=seed)
 
 
 
@@ -178,7 +178,7 @@ lengths = [20, 50, 80]
 for l in lengths:
     print(f"\nlength = {l}")
     print(f"\nBlackout:")
-    evaluate_imputation_all(models=models, filename=filename, trials=10, mse_folder=mse_folder, dataset_name='awn', batch_size=32, length=l, unnormalize=True)
+    evaluate_imputation_all(models=models, filename=filename, trials=10, mse_folder=mse_folder, dataset_name='awn', batch_size=8, length=l, unnormalize=True)
 
 # print(f"\nForecasting:")
 # evaluate_imputation_all(models=models, trials=1, mse_folder=mse_folder, dataset_name='synth_v1', batch_size=32, length=(10, 80), forecasting=True, noise=noise, mean=mean, std=std)
@@ -186,4 +186,4 @@ for l in lengths:
 miss_ratios = [0.2, 0.5, 0.8]
 for ratio in miss_ratios:
     print(f"\nRandom Missing: ratio ({ratio})")
-    evaluate_imputation_all(models=models, filename=filename, trials=10, mse_folder=mse_folder, dataset_name='awn', batch_size=32, missing_ratio=ratio, random_trial=True, unnormalize=True)
+    evaluate_imputation_all(models=models, filename=filename, trials=10, mse_folder=mse_folder, dataset_name='awn', batch_size=8, missing_ratio=ratio, random_trial=True, unnormalize=True)
