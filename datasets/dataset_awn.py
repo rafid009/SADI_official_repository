@@ -44,6 +44,7 @@ def parse_data(sample, rate=0.3, is_test=False, length=100, include_features=Non
         indices = np.where(~np.isnan(evals))[0].tolist()
         indices = np.random.choice(indices, int(len(indices) * rate))
         values = evals.copy()
+        print(f"indices: {indices}\ntype: {type(indices[0])}")
         values[indices] = np.nan
         mask = ~np.isnan(values)
         mask = mask.reshape(shp)
