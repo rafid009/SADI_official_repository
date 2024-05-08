@@ -91,7 +91,7 @@ for file in os.listdir(folder):
             count+=1
             if count == m:
                 x.append(df.iloc[i][features])
-                X.append(np.array(x))
+                X.append(np.array(x, dtype=np.float32))
                 x = []
                 count = 0
                 gc.collect()
@@ -105,7 +105,7 @@ for file in os.listdir(folder):
                 for j in range(len(x[0])):
                     y.append(np.nan)
                 x.append(y)
-            X.append(np.array(x))
+            X.append(np.array(x, dtype=np.float32))
             x = []
             gc.collect()
         index += 1

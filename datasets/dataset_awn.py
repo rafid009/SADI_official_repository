@@ -50,7 +50,6 @@ def parse_data(sample, rate=0.3, is_test=False, length=100, include_features=Non
         gt_intact = values.reshape(shp).copy()
         obs_data = np.nan_to_num(evals, copy=True)
         obs_data = obs_data.reshape(shp)
-        # obs_data_intact = evals.reshape(shp)
     elif random_trial:
         evals = sample.copy()
         values = evals.copy()
@@ -108,7 +107,7 @@ class AWN_Dataset(Dataset):
             self.folder = "./data/AWN/singles"
 
         X = np.load(f"{self.folder}/X_{filename}.npy", allow_pickle=True)
-        print(f"X: {X}")
+        print(f"X: {X.astype('float')}")
         B, L, K = X.shape
     
         name = filename.split(".")[0]
@@ -121,13 +120,20 @@ class AWN_Dataset(Dataset):
             X = X[:train_nums+1]
             print(f"X: {X.shape}")
             X_copy = X.reshape(-1, K)
-            self.mean = np.nanmean(X_copy, axis=0)
-            self.std = np.nanstd(X_copy, axis=0)
+
+            self.mean = np.zeros(X_copy.shape[1])
+            self.std = np.ones(X_copy.shape[1])
+            for i in range(X_copy.shape[1]):
+                if np.isnan(X_copy[:,i]).sum() < X_copy.shape[0]:
+                    self.mean[i] = np.mean(X_copy[:,i])
+                    self.std[i] = np.std(X_copy[:,i])
+            
+            # self.mean = np.nanmean(X_copy, axis=0) #
+            # self.std = np.nanstd(X_copy, axis=0)
             np.save(f"{self.folder}/{name}_mean.npy", self.mean)
             np.save(f"{self.folder}/{name}_std.npy", self.std)
 
         
-
         for i in range(X.shape[0]):
             obs_val, obs_mask, mask, sample, obs_intact = parse_data(X[i], rate, is_test, length, forward_trial=forward_trial, random_trial=random_trial, partial_bm_config=partial_bm_config)
             self.observed_values.append(obs_val)
