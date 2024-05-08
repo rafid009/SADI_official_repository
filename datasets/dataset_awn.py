@@ -107,16 +107,18 @@ class AWN_Dataset(Dataset):
         else:
             self.folder = "./data/AWN/singles"
 
-        X = np.load(f"{self.folder}/X_{filename}.npy")
+        X = np.load(f"{self.folder}/X_{filename}.npy", allow_pickle=True)
+        print(f"X: {X}")
         B, L, K = X.shape
     
         name = filename.split(".")[0]
+        train_nums = int(X.shape[0]*0.8)
         if is_test:
-            X = X[-1]
+            X = X[train_nums:]
             self.mean = np.load(f"{self.folder}/{name}_mean.npy")
             self.std = np.load(f"{self.folder}/{name}_std.npy")
         else:
-            X = X[:-1]
+            X = X[:train_nums+1]
             print(f"X: {X.shape}")
             X_copy = X.reshape(-1, K)
             self.mean = np.nanmean(X_copy, axis=0)
