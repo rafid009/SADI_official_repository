@@ -29,7 +29,7 @@ common_config = {
         'res_connect_blocks': False,
         'is-fde-linear': False
     },
-    'name': 'fde_gta_wt_comb'
+    'name': ''
 }
 
 partial_bm_config = {

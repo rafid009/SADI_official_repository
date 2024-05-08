@@ -97,7 +97,7 @@ for file in os.listdir(folder):
                 gc.collect()
             else:
                 x.append(df.iloc[i][features])
-        if len(x) < m:
+        if len(x) != 0 and len(x) < m:
             adds = m - len(x)
             # print(f"len(x): {len(x)}, m={m}, adds: {adds}")
             for i in range(adds):
