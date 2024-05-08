@@ -25,7 +25,7 @@ class SADI_base(nn.Module):
 
 
         config_diff = config["diffusion"]
-        config_diff["side_dim"] = self.emb_total_dim
+        # config_diff["side_dim"] = self.emb_total_dim
 
         self.diffmodel = SADI(
             diff_steps=config['diffusion']['num_steps'],

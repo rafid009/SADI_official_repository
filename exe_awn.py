@@ -1,4 +1,4 @@
-from models.sadi_wrapper import SADI_Synth
+from models.sadi_wrapper import SADI_AWN
 from datasets.dataset_awn import get_dataloader, get_testloader_AWN
 from utils.utils import train, get_num_params, calc_quantile_CRPS, evaluate_imputation_all
 import numpy as np
@@ -138,7 +138,7 @@ config_sadi['ablation'] = common_config['ablation']
 config_sadi['name'] = common_config['name']
 print(f"config: {config_sadi}")
 name = config_sadi['name']
-model_sadi = SADI_Synth(config_sadi, device, target_dim=len(given_features)).to(device)
+model_sadi = SADI_AWN(config_sadi, device, target_dim=len(given_features)).to(device)
 
 model_filename = f"model_SADI_awn_{filename.split('.')[0]}.pth"
 print(f"\n\SADI training starts.....\n")
