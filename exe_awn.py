@@ -63,9 +63,9 @@ given_features = [
 seed = np.random.randint(10, 100)
 nsample = 50
 
-n_steps = 100
+n_steps = 672
 n_features = len(given_features)
-num_seasons = 50
+# num_seasons = 50
 noise = False
 filename = '330141.csv'
 
