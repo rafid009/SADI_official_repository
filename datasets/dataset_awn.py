@@ -103,9 +103,9 @@ class AWN_Dataset(Dataset):
         self.gt_masks = []
         self.gt_intact = []
         if is_test:
-            self.folder = "./data/AWN/train_single"
+            self.folder = "./data/AWN/singles"
         else:
-            self.folder = "./data/AWN/train_single"
+            self.folder = "./data/AWN/singles"
 
         X = np.load(f"{self.folder}/X_{filename}.npy")
         B, L, K = X.shape
