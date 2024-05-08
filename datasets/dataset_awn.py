@@ -107,7 +107,8 @@ class AWN_Dataset(Dataset):
             self.folder = "./data/AWN/singles"
 
         X = np.load(f"{self.folder}/X_{filename}.npy", allow_pickle=True)
-        print(f"X: {X.astype('float')}")
+        X = X.astype('float')
+        # print(f"X: {X.astype('float')}")
         B, L, K = X.shape
     
         name = filename.split(".")[0]
