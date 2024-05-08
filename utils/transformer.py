@@ -52,9 +52,9 @@ class MultiHeadAttention(nn.Module):
                 self.w_ks = Conv1d_with_init(d_channel, d_channel, kernel_size=3, bias=False, dilation=dilation)
                 self.w_vs = Conv1d_with_init(d_channel, d_channel, kernel_size=3, bias=False, dilation=dilation)
                 if self.choice == 'fde-conv-multi':
-                    self.w_q_head = Conv1d_with_init(1, self.n_head, kernel_size=1, bias=False)
-                    self.w_k_head = Conv1d_with_init(1, self.n_head, kernel_size=1, bias=False)
-                    self.w_v_head = Conv1d_with_init(1, self.n_head, kernel_size=1, bias=False)
+                    self.w_q_head = nn.Linear(d_model, n_head * d_k, bias=False)
+                    self.w_k_head = nn.Linear(d_model, n_head * d_k, bias=False)
+                    self.w_v_head = nn.Linear(d_model, n_head * d_v, bias=False)
             else:
                 self.w_qs = nn.Linear(d_model, n_head * d_k, bias=False)
                 self.w_ks = nn.Linear(d_model, n_head * d_k, bias=False)

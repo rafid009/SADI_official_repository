@@ -208,14 +208,13 @@ class SADI_base(nn.Module):
             observed_data,
             observed_mask,
             gt_mask,
-            for_pattern_mask,
-            _, _, _
+            _
         ) = self.process_data(batch)
         if is_train == 0:
             cond_mask = gt_mask
         elif self.target_strategy == "mix":
             cond_mask = self.get_hist_mask(
-                observed_mask, for_pattern_mask=for_pattern_mask
+                observed_mask
             )
         elif self.target_strategy == 'blackout':
             cond_mask = self.get_bm_mask(
@@ -232,10 +231,7 @@ class SADI_base(nn.Module):
             observed_data,
             observed_mask,
             gt_mask,
-            _,
-            cut_length,
-            obs_data_inact,
-            gt_intact
+            cut_length
         ) = self.process_data(batch)
 
         with torch.no_grad():
@@ -246,7 +242,7 @@ class SADI_base(nn.Module):
             for i in range(len(cut_length)):
                 target_mask[i, ..., 0 : cut_length[i].item()] = 0
        
-        return samples, observed_data, target_mask, observed_mask, obs_data_inact, gt_intact
+        return samples, observed_data, target_mask, observed_mask
 
 
 class SADI_Agaid(SADI_base):
@@ -284,23 +280,23 @@ class SADI_AWN(SADI_base):
         observed_data = batch["observed_data"].to(self.device).float()
         observed_mask = batch["observed_mask"].to(self.device).float()
         gt_mask = batch["gt_mask"].to(self.device).float()
-        observed_data_intact = batch["obs_data_intact"].to(self.device).float()
-        gt_intact = batch["gt_intact"]#.to(self.device).float()
+        # observed_data_intact = batch["obs_data_intact"].to(self.device).float()
+        # gt_intact = batch["gt_intact"]#.to(self.device).float()
         observed_data = observed_data.permute(0, 2, 1)
         observed_mask = observed_mask.permute(0, 2, 1)
         gt_mask = gt_mask.permute(0, 2, 1)
 
         cut_length = torch.zeros(len(observed_data)).long().to(self.device)
-        for_pattern_mask = observed_mask
+        # for_pattern_mask = observed_mask
 
         return (
             observed_data,
             observed_mask,
             gt_mask,
-            for_pattern_mask,
+            # for_pattern_mask,
             cut_length,
-            observed_data_intact,
-            gt_intact
+            # observed_data_intact,
+            # gt_intact
         )
     
 class SADI_Synth(SADI_base):

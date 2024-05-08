@@ -107,15 +107,17 @@ class AWN_Dataset(Dataset):
         else:
             self.folder = "./data/AWN/train_single"
 
-        X = np.load(f"{self.folder}/{filename}.npy")
+        X = np.load(f"{self.folder}/X_{filename}.npy")
         B, L, K = X.shape
-        X_copy = X.reshape(-1, K)
-
+    
         name = filename.split(".")[0]
         if is_test:
+            X = X[-1]
             self.mean = np.load(f"{self.folder}/{name}_mean.npy")
             self.std = np.load(f"{self.folder}/{name}_std.npy")
         else:
+            X = X[:-1]
+            X_copy = X.reshape(-1, K)
             self.mean = np.nanmean(X_copy, axis=0)
             self.std = np.nanstd(X_copy, axis=0)
             np.save(f"{self.folder}/{name}_mean.npy", self.mean)
@@ -146,9 +148,9 @@ class AWN_Dataset(Dataset):
             "observed_data": self.observed_values[index],
             "observed_mask": self.observed_masks[index],
             # "gt_mask": self.gt_masks[index],
-            "obs_data_intact": self.obs_data_intact[index],
-            "timepoints": np.arange(self.eval_length),
-            "gt_intact": self.gt_intact[index]
+            # "obs_data_intact": self.obs_data_intact[index],
+            # "timepoints": np.arange(self.eval_length),
+            # "gt_intact": self.gt_intact[index]
         }
         if len(self.gt_masks) == 0:
             s["gt_mask"] = None

@@ -200,7 +200,7 @@ def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, 
             if 'SADI' in models.keys():
                 output_sadi = models['SADI'].evaluate(test_batch, nsample)
                 if 'CSDI' not in models.keys():
-                    samples_sadi, c_target, eval_points, observed_points, obs_intact, gt_intact = output_sadi
+                    samples_sadi, c_target, eval_points, observed_points = output_sadi
                     c_target = c_target.permute(0, 2, 1)  # (B,L,K)
                     eval_points = eval_points.permute(0, 2, 1)
                     observed_points = observed_points.permute(0, 2, 1)
