@@ -55,10 +55,16 @@ def parse_data(sample, rate=0.3, is_test=False, length=100, include_features=Non
     elif random_trial:
         evals = sample.copy()
         values = evals.copy()
-        for i in range(evals.shape[1]):
-            indices = np.where(~np.isnan(evals[:, i]))[0].tolist()
-            indices = np.random.choice(indices, int(len(indices) * rate))
-            values[indices, i] = np.nan
+        # for i in range(evals.shape[1]):
+        #     indices = np.where(~np.isnan(evals[:, i]))[0].tolist()
+        #     indices = np.random.choice(indices, int(len(indices) * rate))
+        #     if len(indices) == 0:
+        #     values[indices, i] = np.nan
+        indices = np.where(~np.isnan(evals))[0].tolist()
+        indices = np.random.choice(indices, int(len(indices) * rate))
+        values = evals.copy()
+        if len(indices) != 0:
+            values[indices] = np.nan
         mask = ~np.isnan(values)
         gt_intact = values
         obs_data = np.nan_to_num(evals, copy=True)
@@ -139,11 +145,14 @@ class AWN_Dataset(Dataset):
         
         for i in range(X.shape[0]):
             obs_val, obs_mask, mask, sample, obs_intact = parse_data(X[i], rate, is_test, length, forward_trial=forward_trial, random_trial=random_trial, partial_bm_config=partial_bm_config)
-            self.observed_values.append(obs_val)
-            self.observed_masks.append(obs_mask)
-            self.gt_masks.append(mask)
-            self.obs_data_intact.append(sample)
-            self.gt_intact.append(obs_intact)
+            
+            if obs_mask != mask:
+            
+                self.observed_values.append(obs_val)
+                self.observed_masks.append(obs_mask)
+                self.gt_masks.append(mask)
+                self.obs_data_intact.append(sample)
+                self.gt_intact.append(obs_intact)
         self.gt_masks = torch.tensor(np.array(self.gt_masks), dtype=torch.float32)
         self.observed_values = torch.tensor(np.array(self.observed_values), dtype=torch.float32)
         self.obs_data_intact = np.array(self.obs_data_intact)
