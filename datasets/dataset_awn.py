@@ -110,7 +110,7 @@ class AWN_Dataset(Dataset):
 
         X = np.load(f"{self.folder}/X_{filename}.npy", allow_pickle=True)
         X = X.astype('float')
-        # print(f"X: {X.astype('float')}")
+        print(f"X: {X}")
         B, L, K = X.shape
     
         name = filename.split(".")[0]
@@ -151,8 +151,8 @@ class AWN_Dataset(Dataset):
         self.observed_masks = torch.tensor(np.array(self.observed_masks), dtype=torch.float32)
         # print(f"obs mask: {self.observed_values}\n\nmean: {}")
         self.observed_values = ((self.observed_values - self.mean) / self.std) * self.observed_masks
-        self.obs_data_intact = ((self.obs_data_intact - self.mean) / self.std) * self.observed_masks.numpy()
-        self.gt_intact = ((self.gt_intact - self.mean) / self.std) * self.gt_masks.numpy()
+        # self.obs_data_intact = ((self.obs_data_intact - self.mean) / self.std) * self.observed_masks.numpy()
+        # self.gt_intact = ((self.gt_intact - self.mean) / self.std) * self.gt_masks.numpy()
 
         
     def __getitem__(self, index):
@@ -179,7 +179,7 @@ def get_dataloader(n_steps, filenames, batch_size=16, missing_ratio=0.1, seed=10
     train_dataset = AWN_Dataset(n_steps, filenames[0], rate=0.01)
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
-    test_dataset = AWN_Dataset(n_steps, filenames[1], rate=missing_ratio, random_trial=True)
+    test_dataset = AWN_Dataset(n_steps, filenames[1], rate=missing_ratio, random_trial=True, is_test=True)
     test_loader = DataLoader(test_dataset, batch_size=batch_size)
 
     return train_loader, test_loader
