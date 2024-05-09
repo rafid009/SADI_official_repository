@@ -146,7 +146,7 @@ class AWN_Dataset(Dataset):
         for i in range(X.shape[0]):
             obs_val, obs_mask, mask, sample, obs_intact = parse_data(X[i], rate, is_test, length, forward_trial=forward_trial, random_trial=random_trial, partial_bm_config=partial_bm_config)
             
-            if obs_mask != mask:
+            if (obs_mask != mask).any():
             
                 self.observed_values.append(obs_val)
                 self.observed_masks.append(obs_mask)
