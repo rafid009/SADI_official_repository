@@ -139,6 +139,7 @@ class AWN_Dataset(Dataset):
             
             # self.mean = np.nanmean(X_copy, axis=0) #
             # self.std = np.nanstd(X_copy, axis=0)
+            print(f"mean: {self.mean}\nstd: {self.std}")
             np.save(f"{self.folder}/{name}_mean.npy", self.mean)
             np.save(f"{self.folder}/{name}_std.npy", self.std)
 
@@ -147,7 +148,7 @@ class AWN_Dataset(Dataset):
             obs_val, obs_mask, mask, sample, obs_intact = parse_data(X[i], rate, is_test, length, forward_trial=forward_trial, random_trial=random_trial, partial_bm_config=partial_bm_config)
             
             if not is_test or (obs_mask != mask).any():
-                print(f"obs_val: {obs_val}\nobs shape: {obs_val.shape}")
+                # print(f"obs_val: {obs_val}\nobs shape: {obs_val.shape}")
                 self.observed_values.append(obs_val)
                 self.observed_masks.append(obs_mask)
                 self.gt_masks.append(mask)
@@ -160,6 +161,7 @@ class AWN_Dataset(Dataset):
         self.observed_masks = torch.tensor(np.array(self.observed_masks), dtype=torch.float32)
         # print(f"obs mask: {self.observed_values}\n\nmean: {}")
         self.observed_values = ((self.observed_values - self.mean) / self.std) * self.observed_masks
+        print(f"obs_val: {self.observed_values}")
         # self.obs_data_intact = ((self.obs_data_intact - self.mean) / self.std) * self.observed_masks.numpy()
         # self.gt_intact = ((self.gt_intact - self.mean) / self.std) * self.gt_masks.numpy()
 
