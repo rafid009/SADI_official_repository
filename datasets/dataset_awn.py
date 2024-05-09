@@ -127,19 +127,19 @@ class AWN_Dataset(Dataset):
             self.std = np.load(f"{self.folder}/{name}_std.npy")
         else:
             X = X[:train_nums+1]
-            print(f"X: {X.shape}")
+            # print(f"X: {X.shape}")
             X_copy = X.reshape(-1, K)
 
             self.mean = np.zeros(X_copy.shape[1])
             self.std = np.ones(X_copy.shape[1])
             for i in range(X_copy.shape[1]):
                 if np.isnan(X_copy[:,i]).sum() < X_copy.shape[0]:
-                    self.mean[i] = np.mean(X_copy[:,i])
-                    self.std[i] = np.std(X_copy[:,i])
+                    self.mean[i] = np.nanmean(X_copy[:,i])
+                    self.std[i] = np.nanstd(X_copy[:,i])
             
             # self.mean = np.nanmean(X_copy, axis=0) #
             # self.std = np.nanstd(X_copy, axis=0)
-            print(f"mean: {self.mean}\nstd: {self.std}")
+            # print(f"mean: {self.mean}\nstd: {self.std}")
             np.save(f"{self.folder}/{name}_mean.npy", self.mean)
             np.save(f"{self.folder}/{name}_std.npy", self.std)
 
@@ -161,7 +161,7 @@ class AWN_Dataset(Dataset):
         self.observed_masks = torch.tensor(np.array(self.observed_masks), dtype=torch.float32)
         # print(f"obs mask: {self.observed_values}\n\nmean: {}")
         self.observed_values = ((self.observed_values - self.mean) / self.std) * self.observed_masks
-        print(f"obs_val: {self.observed_values}")
+        # print(f"obs_val: {self.observed_values}")
         # self.obs_data_intact = ((self.obs_data_intact - self.mean) / self.std) * self.observed_masks.numpy()
         # self.gt_intact = ((self.gt_intact - self.mean) / self.std) * self.gt_masks.numpy()
 

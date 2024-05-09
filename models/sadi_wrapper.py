@@ -115,7 +115,7 @@ class SADI_base(nn.Module):
         self, observed_data, cond_mask, observed_mask, is_train, set_t=-1
     ):
         B, K, L = observed_data.shape
-        print(f"observed data: {observed_data}\n")
+        # print(f"observed data: {observed_data}\n")
         if is_train != 1:  # for validation
             t = (torch.ones(B) * set_t).long().to(self.device)
         else:
@@ -136,7 +136,7 @@ class SADI_base(nn.Module):
         }
 
         predicted_1, predicted_2, predicted_3 = self.diffmodel(inputs, t)
-        print(f"predicted3: {predicted_3}\n")
+        # print(f"predicted3: {predicted_3}\n")
         residual_3 = (noise - predicted_3) * target_mask
         
         if is_train != 0 and (predicted_1 is not None) and (predicted_2 is not None):
