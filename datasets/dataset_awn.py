@@ -200,8 +200,8 @@ def get_testloader_AWN(n_steps, filename, batch_size=16, missing_ratio=0.2, seed
     np.random.seed(seed=seed)
     if forecasting:
         forward = n_steps - length
-        test_dataset = AWN_Dataset(n_steps, filename=filename, rate=missing_ratio, is_test=True, length=length, seed=seed, forward_trial=forward)
+        test_dataset = AWN_Dataset(n_steps, filename=filename, rate=missing_ratio, is_test=True, length=length, forward_trial=forward)
     else:
-        test_dataset = AWN_Dataset(n_steps, filename=filename, rate=missing_ratio, is_test=True, length=length, seed=seed, random_trial=random_trial, partial_bm_config=partial_bm_config)
+        test_dataset = AWN_Dataset(n_steps, filename=filename, rate=missing_ratio, is_test=True, length=length, random_trial=random_trial, partial_bm_config=partial_bm_config)
     test_loader = DataLoader(test_dataset, batch_size=batch_size)
     return test_loader
