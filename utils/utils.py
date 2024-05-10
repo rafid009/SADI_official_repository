@@ -278,7 +278,9 @@ def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, 
                 elif dataset_name == 'awn':
                     folder = "./data/AWN/singles"
                     train_mean = np.load(f"{folder}/{filename.split('.')[0]}_mean.npy")
+                    train_mean = torch.tensor(train_mean, dtype=torch.float32, device=device)
                     train_std = np.load(f"{folder}/{filename.split('.')[0]}_std.npy")
+                    train_std = torch.tensor(train_std, dtype=torch.float32, device=device)
                 else:
                     train_mean = torch.tensor(mean, dtype=torch.float32, device=device)
                     train_std = torch.tensor(std, dtype=torch.float32, device=device)
