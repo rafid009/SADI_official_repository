@@ -301,7 +301,11 @@ def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, 
                     samples_median_csdi = samples_median.values
 
             if data:
-                for idx in range(samples.shape[1]):
+                if 'CSDI' in models.keys():
+                    s = samples
+                else:
+                    s = samples_sadi
+                for idx in range(s.shape[1]):
                     if 'CSDI' in models.keys():
                         samples[0, idx] = (samples[0, idx] * train_std) + train_mean
                     if 'SADI' in models.keys():
