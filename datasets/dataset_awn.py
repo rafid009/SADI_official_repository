@@ -101,7 +101,7 @@ def parse_data(sample, rate=0.3, is_test=False, length=100, include_features=Non
     return obs_data, obs_mask, mask, sample, gt_intact
 
 class AWN_Dataset(Dataset):
-    def __init__(self, n_steps, filename, rate=0.1, is_test=False, length=100, forward_trial=-1, random_trial=False, partial_bm_config=None) -> None:
+    def __init__(self, n_steps, filename, rate=0.1, is_test=False, length=100, forward_trial=-1, random_trial=False, partial_bm_config=None, data=False) -> None:
         super().__init__()
         self.eval_length = n_steps
         self.observed_values = []
@@ -136,16 +136,14 @@ class AWN_Dataset(Dataset):
                 if np.isnan(X_copy[:,i]).sum() < X_copy.shape[0]:
                     self.mean[i] = np.nanmean(X_copy[:,i])
                     self.std[i] = np.nanstd(X_copy[:,i])
-            
-            # self.mean = np.nanmean(X_copy, axis=0) #
-            # self.std = np.nanstd(X_copy, axis=0)
-            # print(f"mean: {self.mean}\nstd: {self.std}")
+
             np.save(f"{self.folder}/{name}_mean.npy", self.mean)
             np.save(f"{self.folder}/{name}_std.npy", self.std)
 
-        
-        for i in range(X.shape[0]):
-            obs_val, obs_mask, mask, sample, obs_intact = parse_data(X[i], rate, is_test, length, forward_trial=forward_trial, random_trial=random_trial, partial_bm_config=partial_bm_config)
+        index = np.random.choice(X.shape[0])
+
+        if data:
+            obs_val, obs_mask, mask, sample, obs_intact = parse_data(X[index], rate, is_test, length, forward_trial=forward_trial, random_trial=random_trial, partial_bm_config=partial_bm_config)
             
             if not is_test or (obs_mask != mask).any():
                 # print(f"obs_val: {obs_val}\nobs shape: {obs_val.shape}")
@@ -154,6 +152,17 @@ class AWN_Dataset(Dataset):
                 self.gt_masks.append(mask)
                 self.obs_data_intact.append(sample)
                 self.gt_intact.append(obs_intact)
+        else:
+            for i in range(X.shape[0]):
+                obs_val, obs_mask, mask, sample, obs_intact = parse_data(X[i], rate, is_test, length, forward_trial=forward_trial, random_trial=random_trial, partial_bm_config=partial_bm_config)
+                
+                if not is_test or (obs_mask != mask).any():
+                    # print(f"obs_val: {obs_val}\nobs shape: {obs_val.shape}")
+                    self.observed_values.append(obs_val)
+                    self.observed_masks.append(obs_mask)
+                    self.gt_masks.append(mask)
+                    self.obs_data_intact.append(sample)
+                    self.gt_intact.append(obs_intact)
         self.gt_masks = torch.tensor(np.array(self.gt_masks), dtype=torch.float32)
         self.observed_values = torch.tensor(np.array(self.observed_values), dtype=torch.float32)
         self.obs_data_intact = np.array(self.obs_data_intact)
@@ -196,12 +205,12 @@ def get_dataloader(n_steps, filenames, batch_size=16, missing_ratio=0.1, seed=10
     return train_loader, test_loader
 
 
-def get_testloader_AWN(n_steps, filename, batch_size=16, missing_ratio=0.2, seed=10, length=100, forecasting=False, random_trial=False, partial_bm_config=None):
+def get_testloader_AWN(n_steps, filename, batch_size=16, missing_ratio=0.2, seed=10, length=100, forecasting=False, random_trial=False, partial_bm_config=None, data=False):
     np.random.seed(seed=seed)
     if forecasting:
         forward = n_steps - length
         test_dataset = AWN_Dataset(n_steps, filename=filename, rate=missing_ratio, is_test=True, length=length, forward_trial=forward)
     else:
-        test_dataset = AWN_Dataset(n_steps, filename=filename, rate=missing_ratio, is_test=True, length=length, random_trial=random_trial, partial_bm_config=partial_bm_config)
+        test_dataset = AWN_Dataset(n_steps, filename=filename, rate=missing_ratio, is_test=True, length=length, random_trial=random_trial, partial_bm_config=partial_bm_config, data=data)
     test_loader = DataLoader(test_dataset, batch_size=batch_size)
     return test_loader

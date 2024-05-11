@@ -70,7 +70,7 @@ n_steps = 672
 n_features = len(given_features)
 # num_seasons = 50
 noise = False
-filename = '330141.csv'
+filename =  '100185.csv' # 1: '330141.csv'
 
 train_loader, valid_loader = get_dataloader(n_steps, (filename, filename), batch_size=8, missing_ratio=0.2, seed=seed)
 
@@ -147,26 +147,26 @@ model_filename = f"model_SADI_awn_{filename.split('.')[0]}.pth"
 print(f"\n\SADI training starts.....\n")
 model_folder = "saved_model_awn"
 
-# train(
-#     model_sadi,
-#     config_sadi["train"],
-#     train_loader,
-#     valid_loader=valid_loader,
-#     foldername=model_folder,
-#     filename=f"{model_filename}",
-# )
+train(
+    model_sadi,
+    config_sadi["train"],
+    train_loader,
+    valid_loader=valid_loader,
+    foldername=model_folder,
+    filename=f"{model_filename}",
+)
 
-model_sadi.load_state_dict(torch.load(f"{model_folder}/{model_filename}"))
+# model_sadi.load_state_dict(torch.load(f"{model_folder}/{model_filename}"))
 
 
 models = {
     'SADI': model_sadi
 }
-mse_folder = f"results_awn_{name}_{partial_bm_config['features']}/metric"
-data_folder = f"results_awn_{name}_{partial_bm_config['features']}/data"
+mse_folder = f"results_awn_{filename.split('.')[0]}/metric"
+data_folder = f"results_awn_{filename.split('.')[0]}/data"
 
 
-pbm = [11]
+pbm = [4]
 for bm in pbm:  
     partial_bm_config['features'] = bm
     print(f"features: {partial_bm_config['features']}")
@@ -174,11 +174,11 @@ for bm in pbm:
     evaluate_imputation_all(models=models, filename=filename, trials=1, mse_folder=data_folder, dataset_name='awn', batch_size=1, partial_bm_config=partial_bm_config, data=True, unnormalize=True)
 
 
-lengths = [20, 50, 80]
+lengths = [100, 400, 700]
 for l in lengths:
     print(f"\nlength = {l}")
     print(f"\nBlackout:")
-    evaluate_imputation_all(models=models, filename=filename, trials=10, mse_folder=mse_folder, dataset_name='awn', batch_size=8, length=l, unnormalize=True)
+    evaluate_imputation_all(models=models, filename=filename, trials=3, mse_folder=mse_folder, dataset_name='awn', batch_size=8, length=l, unnormalize=True)
 
 # print(f"\nForecasting:")
 # evaluate_imputation_all(models=models, trials=1, mse_folder=mse_folder, dataset_name='synth_v1', batch_size=32, length=(10, 80), forecasting=True, noise=noise, mean=mean, std=std)
@@ -186,4 +186,4 @@ for l in lengths:
 miss_ratios = [0.2, 0.5, 0.8]
 for ratio in miss_ratios:
     print(f"\nRandom Missing: ratio ({ratio})")
-    evaluate_imputation_all(models=models, filename=filename, trials=10, mse_folder=mse_folder, dataset_name='awn', batch_size=8, missing_ratio=ratio, random_trial=True, unnormalize=True)
+    evaluate_imputation_all(models=models, filename=filename, trials=3, mse_folder=mse_folder, dataset_name='awn', batch_size=8, missing_ratio=ratio, random_trial=True, unnormalize=True)
