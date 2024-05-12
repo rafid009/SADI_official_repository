@@ -165,10 +165,10 @@ models = {
 mse_folder = f"results_awn_{filename.split('.')[0]}/metric"
 data_folder = f"results_awn_{filename.split('.')[0]}/data"
 
-miss_ratios = [0.2, 0.5, 0.8]
-for ratio in miss_ratios:
-    print(f"\nRandom Missing: ratio ({ratio})")
-    evaluate_imputation_all(models=models, filename=filename, trials=3, mse_folder=mse_folder, dataset_name='awn', batch_size=8, missing_ratio=ratio, random_trial=True, unnormalize=True)
+# miss_ratios = [0.2, 0.5, 0.8]
+# for ratio in miss_ratios:
+#     print(f"\nRandom Missing: ratio ({ratio})")
+#     evaluate_imputation_all(models=models, filename=filename, trials=3, mse_folder=mse_folder, dataset_name='awn', batch_size=8, missing_ratio=ratio, random_trial=True, unnormalize=True)
 
 
 pbm = [4]
