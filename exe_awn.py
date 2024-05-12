@@ -156,7 +156,7 @@ model_folder = "saved_model_awn"
 #     filename=f"{model_filename}",
 # )
 
-# model_sadi.load_state_dict(torch.load(f"{model_folder}/{model_filename}"))
+model_sadi.load_state_dict(torch.load(f"{model_folder}/{model_filename}"))
 
 
 models = {
