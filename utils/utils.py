@@ -14,10 +14,12 @@ from models.sadi_wrapper import SADI_Agaid, SADI_AWN
 from pypots.imputation import SAITS
 import math
 import sys
+import time
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 np.set_printoptions(threshold=sys.maxsize)
 torch.set_printoptions(threshold=torch.inf)
+
 
 def get_num_params(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -186,216 +188,222 @@ def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, 
         csdi_crps_avg = 0
         sadi_crps_avg = 0
 
-        
-        for j, test_batch in enumerate(test_loader, start=1):
-            if 'CSDI' in models.keys():
-                output = models['CSDI'].evaluate(test_batch, nsample)
-                samples, c_target, eval_points, observed_points, observed_time, obs_intact, gt_intact = output
-                samples = samples.permute(0, 1, 3, 2)  # (B,nsample,L,K)
-                c_target = c_target.permute(0, 2, 1)  # (B,L,K)
-                eval_points = eval_points.permute(0, 2, 1)
-                observed_points = observed_points.permute(0, 2, 1)
-                samples_median = samples.median(dim=1)
-            
-            if 'SADI' in models.keys():
-                output_sadi = models['SADI'].evaluate(test_batch, nsample)
-                if 'CSDI' not in models.keys():
-                    samples_sadi, c_target, eval_points, observed_points = output_sadi
+        with tqdm(test_loader, mininterval=5.0, maxinterval=50.0) as it:
+            for j, test_batch in enumerate(it, start=1):
+                if 'CSDI' in models.keys():
+                    output = models['CSDI'].evaluate(test_batch, nsample)
+                    samples, c_target, eval_points, observed_points, observed_time, obs_intact, gt_intact = output
+                    samples = samples.permute(0, 1, 3, 2)  # (B,nsample,L,K)
                     c_target = c_target.permute(0, 2, 1)  # (B,L,K)
                     eval_points = eval_points.permute(0, 2, 1)
                     observed_points = observed_points.permute(0, 2, 1)
-                else:
-                    samples_sadi, _, _, _, _, _, _ = output_sadi
-                samples_sadi = samples_sadi.permute(0, 1, 3, 2)
-                samples_sadi_median = samples_sadi.median(dim=1)
-                samples_sadi_mean = samples_sadi.mean(dim=1)
-                samples_sadi_mean_med = torch.mean(torch.stack([samples_sadi_median.values, samples_sadi_mean], dim=1), dim=1)
+                    samples_median = samples.median(dim=1)
+                
+                if 'SADI' in models.keys():
+                    if data:
+                        start = time.time()
 
-            if 'SAITS' in models.keys():
-                gt_intact = gt_intact.squeeze(axis=0)
-                saits_X = gt_intact #test_batch['obs_data_intact']
-                if batch_size == 1:
-                    saits_X = saits_X.unsqueeze(0)
-                saits_output = models['SAITS'].impute({'X': saits_X})
-
-            if 'KNN' in models.keys():
-                gt_intact = gt_intact.squeeze(axis=0)
-                knn_X = gt_intact #test_batch['obs_data_intact']
-                if batch_size == 1:
-                    knn_X = knn_X.unsqueeze(0)
-                knn_output = None
-                for k in range(knn_X.shape[0]):
-                    knn_pred = models['KNN'].transform(knn_X[k])
-                    if knn_output is None:
-                        knn_output = knn_pred
+                    output_sadi = models['SADI'].evaluate(test_batch, nsample)
+                    if data:
+                        end = time.time()
+                        print(f"time: {(end-start)/1000}s")
+                    if 'CSDI' not in models.keys():
+                        samples_sadi, c_target, eval_points, observed_points = output_sadi
+                        c_target = c_target.permute(0, 2, 1)  # (B,L,K)
+                        eval_points = eval_points.permute(0, 2, 1)
+                        observed_points = observed_points.permute(0, 2, 1)
                     else:
-                        knn_output = np.stack([knn_output, knn_pred], axis=0)
+                        samples_sadi, _, _, _, _, _, _ = output_sadi
+                    samples_sadi = samples_sadi.permute(0, 1, 3, 2)
+                    samples_sadi_median = samples_sadi.median(dim=1)
+                    samples_sadi_mean = samples_sadi.mean(dim=1)
+                    samples_sadi_mean_med = torch.mean(torch.stack([samples_sadi_median.values, samples_sadi_mean], dim=1), dim=1)
 
-            if 'BRITS' in models.keys():
-                # brits_output = test_evaluate(models['BRITS'], f'json/json_eval_{dataset_name}', test_batch['observed_data'], c_target, observed_points, eval_points)
-                gt_intact = gt_intact.squeeze(axis=0)
-                brits_X = gt_intact #test_batch['obs_data_intact']
-                if batch_size == 1:
-                    brits_X = brits_X.unsqueeze(0)
-                brits_output = models['BRITS'].impute({'X': brits_X})
+                if 'SAITS' in models.keys():
+                    gt_intact = gt_intact.squeeze(axis=0)
+                    saits_X = gt_intact #test_batch['obs_data_intact']
+                    if batch_size == 1:
+                        saits_X = saits_X.unsqueeze(0)
+                    saits_output = models['SAITS'].impute({'X': saits_X})
 
-            if 'MICE' in models.keys():
-                gt_intact = gt_intact.squeeze(axis=0)
-                mice_X = gt_intact
-                if batch_size == 1:
-                    mice_X = mice_X.unsqueeze(0)
-                mice_output = None
-                for k in range(mice_X.shape[0]):
-                    mice_pred = models['MICE'].transform(mice_X[k].cpu())
-                    if mice_output is None:
-                        mice_output = np.expand_dims(mice_pred, axis=0)
-                    else:
-                        # print(f"mice out: {mice_output.shape}\nmice pred: {mice_pred.shape}")
-                        mice_pred = np.expand_dims(mice_pred, axis=0)
-                        mice_output = np.concatenate([mice_output, mice_pred], axis=0)
-            
-            if unnormalize:
-                if dataset_name == 'pm25':
-                    path = "./data/pm25/pm25_meanstd.pk"
-                    with open(path, "rb") as f:
-                        train_mean, train_std = pickle.load(f)
+                if 'KNN' in models.keys():
+                    gt_intact = gt_intact.squeeze(axis=0)
+                    knn_X = gt_intact #test_batch['obs_data_intact']
+                    if batch_size == 1:
+                        knn_X = knn_X.unsqueeze(0)
+                    knn_output = None
+                    for k in range(knn_X.shape[0]):
+                        knn_pred = models['KNN'].transform(knn_X[k])
+                        if knn_output is None:
+                            knn_output = knn_pred
+                        else:
+                            knn_output = np.stack([knn_output, knn_pred], axis=0)
+
+                if 'BRITS' in models.keys():
+                    # brits_output = test_evaluate(models['BRITS'], f'json/json_eval_{dataset_name}', test_batch['observed_data'], c_target, observed_points, eval_points)
+                    gt_intact = gt_intact.squeeze(axis=0)
+                    brits_X = gt_intact #test_batch['obs_data_intact']
+                    if batch_size == 1:
+                        brits_X = brits_X.unsqueeze(0)
+                    brits_output = models['BRITS'].impute({'X': brits_X})
+
+                if 'MICE' in models.keys():
+                    gt_intact = gt_intact.squeeze(axis=0)
+                    mice_X = gt_intact
+                    if batch_size == 1:
+                        mice_X = mice_X.unsqueeze(0)
+                    mice_output = None
+                    for k in range(mice_X.shape[0]):
+                        mice_pred = models['MICE'].transform(mice_X[k].cpu())
+                        if mice_output is None:
+                            mice_output = np.expand_dims(mice_pred, axis=0)
+                        else:
+                            # print(f"mice out: {mice_output.shape}\nmice pred: {mice_pred.shape}")
+                            mice_pred = np.expand_dims(mice_pred, axis=0)
+                            mice_output = np.concatenate([mice_output, mice_pred], axis=0)
+                
+                if unnormalize:
+                    if dataset_name == 'pm25':
+                        path = "./data/pm25/pm25_meanstd.pk"
+                        with open(path, "rb") as f:
+                            train_mean, train_std = pickle.load(f)
+                            train_mean = torch.tensor(train_mean, dtype=torch.float32, device=device)
+                            train_std = torch.tensor(train_std, dtype=torch.float32, device=device)
+                    elif dataset_name == 'electricity':
+                        path_mean = "./data/Electricity/mean.npy"
+                        path_std = "./data/Electricity/std.npy"
+                        train_mean = np.load(path_mean)
                         train_mean = torch.tensor(train_mean, dtype=torch.float32, device=device)
+                        train_std = np.load(path_std)
                         train_std = torch.tensor(train_std, dtype=torch.float32, device=device)
-                elif dataset_name == 'electricity':
-                    path_mean = "./data/Electricity/mean.npy"
-                    path_std = "./data/Electricity/std.npy"
-                    train_mean = np.load(path_mean)
-                    train_mean = torch.tensor(train_mean, dtype=torch.float32, device=device)
-                    train_std = np.load(path_std)
-                    train_std = torch.tensor(train_std, dtype=torch.float32, device=device)
-                elif dataset_name == 'nasce':
-                    path_mean = f"{filename[1]}_mean.npy"
-                    path_std = f"{filename[1]}_std.npy"
-                    train_mean = np.load(path_mean)
-                    train_mean = torch.tensor(train_mean, dtype=torch.float32, device=device)
-                    train_std = np.load(path_std)
-                    train_std = torch.tensor(train_std, dtype=torch.float32, device=device)
-                elif dataset_name == 'awn':
-                    folder = "./data/AWN/singles"
-                    train_mean = np.load(f"{folder}/{filename.split('.')[0]}_mean.npy")
-                    train_mean = torch.tensor(train_mean, dtype=torch.float32, device=device)
-                    train_std = np.load(f"{folder}/{filename.split('.')[0]}_std.npy")
-                    train_std = torch.tensor(train_std, dtype=torch.float32, device=device)
-                else:
-                    train_mean = torch.tensor(mean, dtype=torch.float32, device=device)
-                    train_std = torch.tensor(std, dtype=torch.float32, device=device)
+                    elif dataset_name == 'nasce':
+                        path_mean = f"{filename[1]}_mean.npy"
+                        path_std = f"{filename[1]}_std.npy"
+                        train_mean = np.load(path_mean)
+                        train_mean = torch.tensor(train_mean, dtype=torch.float32, device=device)
+                        train_std = np.load(path_std)
+                        train_std = torch.tensor(train_std, dtype=torch.float32, device=device)
+                    elif dataset_name == 'awn':
+                        folder = "./data/AWN/singles"
+                        train_mean = np.load(f"{folder}/{filename.split('.')[0]}_mean.npy")
+                        train_mean = torch.tensor(train_mean, dtype=torch.float32, device=device)
+                        train_std = np.load(f"{folder}/{filename.split('.')[0]}_std.npy")
+                        train_std = torch.tensor(train_std, dtype=torch.float32, device=device)
+                    else:
+                        train_mean = torch.tensor(mean, dtype=torch.float32, device=device)
+                        train_std = torch.tensor(std, dtype=torch.float32, device=device)
 
-                if 'CSDI' in models.keys():
-                    samples_median_csdi = (samples_median.values * train_std) + train_mean
-                if 'SADI' in models.keys():
-                    samples_sadi_mean = (samples_sadi_mean * train_std) + train_mean
-                if 'SAITS' in models.keys():
-                    saits_output = (torch.tensor(saits_output, device=device) * train_std) + train_mean
-                if 'MICE' in models.keys():
-                    mice_output = (torch.tensor(mice_output, device=device) * train_std) + train_mean
-                if 'BRITS' in models.keys():
-                    brits_output = (torch.tensor(brits_output, device=device) * train_std) + train_mean
-                c_target = (c_target * train_std) + train_mean  
-            else:
-                if 'CSDI' in models.keys():
-                    samples_median_csdi = samples_median.values
-
-            if data:
-                if 'CSDI' in models.keys():
-                    s = samples
-                else:
-                    s = samples_sadi
-                for idx in range(s.shape[1]):
                     if 'CSDI' in models.keys():
-                        samples[0, idx] = (samples[0, idx] * train_std) + train_mean
+                        samples_median_csdi = (samples_median.values * train_std) + train_mean
                     if 'SADI' in models.keys():
-                        samples_sadi[0, idx] = (samples_sadi[0, idx] * train_std) + train_mean
-                results_data[j] = {
-                    'target mask': eval_points[0, :, :].cpu().numpy(),
-                    'target': c_target[0, :, :].cpu().numpy(),
-                    'observed_mask': test_batch['observed_mask'][0, :, :].cpu().numpy()
-                }
-                if 'CSDI' in models.keys():
-                        results_data[j]['csdi_median'] = samples_median_csdi[0, :, :].cpu().numpy()
-                        results_data[j]['csdi_samples'] = samples[0].cpu().numpy()
-                if 'SADI' in models.keys():
-                        results_data[j]['sadi_mean'] = samples_sadi_mean[0, :, :].cpu().numpy()
-                        results_data[j]['sadi_samples'] = samples_sadi[0].cpu().numpy()
-                        results_data[j]['sadi_median'] = samples_sadi_median.values[0, :, :].cpu().numpy()
+                        samples_sadi_mean = (samples_sadi_mean * train_std) + train_mean
+                    if 'SAITS' in models.keys():
+                        saits_output = (torch.tensor(saits_output, device=device) * train_std) + train_mean
+                    if 'MICE' in models.keys():
+                        mice_output = (torch.tensor(mice_output, device=device) * train_std) + train_mean
+                    if 'BRITS' in models.keys():
+                        brits_output = (torch.tensor(brits_output, device=device) * train_std) + train_mean
+                    c_target = (c_target * train_std) + train_mean  
+                else:
+                    if 'CSDI' in models.keys():
+                        samples_median_csdi = samples_median.values
 
-                if 'SAITS' in models.keys():
-                    results_data[j]['saits'] = saits_output[0, :, :].cpu().numpy()
+                if data:
+                    if 'CSDI' in models.keys():
+                        s = samples
+                    else:
+                        s = samples_sadi
+                    for idx in range(s.shape[1]):
+                        if 'CSDI' in models.keys():
+                            samples[0, idx] = (samples[0, idx] * train_std) + train_mean
+                        if 'SADI' in models.keys():
+                            samples_sadi[0, idx] = (samples_sadi[0, idx] * train_std) + train_mean
+                    results_data[j] = {
+                        'target mask': eval_points[0, :, :].cpu().numpy(),
+                        'target': c_target[0, :, :].cpu().numpy(),
+                        'observed_mask': test_batch['observed_mask'][0, :, :].cpu().numpy()
+                    }
+                    if 'CSDI' in models.keys():
+                            results_data[j]['csdi_median'] = samples_median_csdi[0, :, :].cpu().numpy()
+                            results_data[j]['csdi_samples'] = samples[0].cpu().numpy()
+                    if 'SADI' in models.keys():
+                            results_data[j]['sadi_mean'] = samples_sadi_mean[0, :, :].cpu().numpy()
+                            results_data[j]['sadi_samples'] = samples_sadi[0].cpu().numpy()
+                            results_data[j]['sadi_median'] = samples_sadi_median.values[0, :, :].cpu().numpy()
 
-                if 'KNN' in models.keys():
-                    results_data[j]['knn'] = knn_output[0, :, :].cpu().numpy()
+                    if 'SAITS' in models.keys():
+                        results_data[j]['saits'] = saits_output[0, :, :].cpu().numpy()
 
-                if 'MICE' in models.keys():
-                    results_data[j]['mice'] = mice_output[0, :, :].cpu().numpy()
-                
-                if 'BRITS' in models.keys():
-                    results_data[j]['brits'] = brits_output[0, :, :].cpu().numpy()
-            else:
-                ###### CSDI ######
-                if 'CSDI' in models.keys():
-                    rmse_csdi = ((samples_median_csdi - c_target) * eval_points) ** 2
-                    rmse_csdi = rmse_csdi.sum().item() / eval_points.sum().item()
-                    csdi_rmse_avg += rmse_csdi
+                    if 'KNN' in models.keys():
+                        results_data[j]['knn'] = knn_output[0, :, :].cpu().numpy()
 
-                    mae_csdi = torch.abs((samples_median_csdi - c_target) * eval_points)
-                    mae_csdi = mae_csdi.sum().item() / eval_points.sum().item()
-                    csdi_mae_avg += mae_csdi
+                    if 'MICE' in models.keys():
+                        results_data[j]['mice'] = mice_output[0, :, :].cpu().numpy()
+                    
+                    if 'BRITS' in models.keys():
+                        results_data[j]['brits'] = brits_output[0, :, :].cpu().numpy()
+                else:
+                    ###### CSDI ######
+                    if 'CSDI' in models.keys():
+                        rmse_csdi = ((samples_median_csdi - c_target) * eval_points) ** 2
+                        rmse_csdi = rmse_csdi.sum().item() / eval_points.sum().item()
+                        csdi_rmse_avg += rmse_csdi
 
-                    csdi_crps = calc_quantile_CRPS(c_target, samples, eval_points, 0, 1)
-                    csdi_crps_avg += csdi_crps
+                        mae_csdi = torch.abs((samples_median_csdi - c_target) * eval_points)
+                        mae_csdi = mae_csdi.sum().item() / eval_points.sum().item()
+                        csdi_mae_avg += mae_csdi
 
-                ###### SADI ######
-                if 'SADI' in models.keys():
-                    rmse_sadi = ((samples_sadi_mean - c_target) * eval_points) ** 2
-                    rmse_sadi = rmse_sadi.sum().item() / eval_points.sum().item()
-                    sadi_rmse_avg += rmse_sadi
+                        csdi_crps = calc_quantile_CRPS(c_target, samples, eval_points, 0, 1)
+                        csdi_crps_avg += csdi_crps
 
-                    mse_sadi_median = ((samples_sadi_median.values - c_target) * eval_points) ** 2
-                    mse_sadi_median = mse_sadi_median.sum().item() / eval_points.sum().item()
-                    sadi_median_avg += mse_sadi_median
+                    ###### SADI ######
+                    if 'SADI' in models.keys():
+                        rmse_sadi = ((samples_sadi_mean - c_target) * eval_points) ** 2
+                        rmse_sadi = rmse_sadi.sum().item() / eval_points.sum().item()
+                        sadi_rmse_avg += rmse_sadi
 
-                    mse_sadi_mean_med = ((samples_sadi_mean_med - c_target) * eval_points) ** 2
-                    mse_sadi_mean_med = mse_sadi_mean_med.sum().item() / eval_points.sum().item()
-                    sadi_mean_med_avg += mse_sadi_mean_med
+                        mse_sadi_median = ((samples_sadi_median.values - c_target) * eval_points) ** 2
+                        mse_sadi_median = mse_sadi_median.sum().item() / eval_points.sum().item()
+                        sadi_median_avg += mse_sadi_median
 
-                    mae_sadi = torch.abs((samples_sadi_mean - c_target) * eval_points)
-                    mae_sadi = mae_sadi.sum().item() / eval_points.sum().item()
-                    sadi_mae_avg += mae_sadi
+                        mse_sadi_mean_med = ((samples_sadi_mean_med - c_target) * eval_points) ** 2
+                        mse_sadi_mean_med = mse_sadi_mean_med.sum().item() / eval_points.sum().item()
+                        sadi_mean_med_avg += mse_sadi_mean_med
 
-                    sadi_crps = calc_quantile_CRPS(c_target, samples_sadi, eval_points, 0, 1)
-                    sadi_crps_avg += sadi_crps
+                        mae_sadi = torch.abs((samples_sadi_mean - c_target) * eval_points)
+                        mae_sadi = mae_sadi.sum().item() / eval_points.sum().item()
+                        sadi_mae_avg += mae_sadi
 
-                ###### SAITS ######
-                if 'SAITS' in models.keys():
-                    rmse_saits = ((torch.tensor(saits_output, device=device)- c_target) * eval_points) ** 2
-                    rmse_saits = rmse_saits.sum().item() / eval_points.sum().item()
-                    saits_rmse_avg += rmse_saits
-                
-                    mae_saits = torch.abs((torch.tensor(saits_output, device=device)- c_target) * eval_points)
-                    mae_saits = mae_saits.sum().item() / eval_points.sum().item()
-                    saits_mae_avg += mae_saits
+                        sadi_crps = calc_quantile_CRPS(c_target, samples_sadi, eval_points, 0, 1)
+                        sadi_crps_avg += sadi_crps
 
-                ###### KNN ######
-                if 'KNN' in models.keys():
-                    rmse_knn = ((torch.tensor(knn_output, device=device)- c_target) * eval_points) ** 2
-                    rmse_knn = rmse_knn.sum().item() / eval_points.sum().item()
-                    knn_rmse_avg += rmse_knn
+                    ###### SAITS ######
+                    if 'SAITS' in models.keys():
+                        rmse_saits = ((torch.tensor(saits_output, device=device)- c_target) * eval_points) ** 2
+                        rmse_saits = rmse_saits.sum().item() / eval_points.sum().item()
+                        saits_rmse_avg += rmse_saits
+                    
+                        mae_saits = torch.abs((torch.tensor(saits_output, device=device)- c_target) * eval_points)
+                        mae_saits = mae_saits.sum().item() / eval_points.sum().item()
+                        saits_mae_avg += mae_saits
 
-                ###### MICE ######
-                if 'MICE' in models.keys():
-                    rmse_mice = ((torch.tensor(mice_output, device=device) - c_target) * eval_points) ** 2
-                    rmse_mice = rmse_mice.sum().item() / eval_points.sum().item()
-                    mice_rmse_avg += rmse_mice
+                    ###### KNN ######
+                    if 'KNN' in models.keys():
+                        rmse_knn = ((torch.tensor(knn_output, device=device)- c_target) * eval_points) ** 2
+                        rmse_knn = rmse_knn.sum().item() / eval_points.sum().item()
+                        knn_rmse_avg += rmse_knn
 
-                ###### BRITS ######
-                if 'BRITS' in models.keys():
-                    rmse_brits = ((torch.tensor(brits_output, device=device) - c_target) * eval_points) ** 2
-                    rmse_brits = rmse_brits.sum().item() / eval_points.sum().item()
-                    brits_rmse_avg += rmse_brits
+                    ###### MICE ######
+                    if 'MICE' in models.keys():
+                        rmse_mice = ((torch.tensor(mice_output, device=device) - c_target) * eval_points) ** 2
+                        rmse_mice = rmse_mice.sum().item() / eval_points.sum().item()
+                        mice_rmse_avg += rmse_mice
+
+                    ###### BRITS ######
+                    if 'BRITS' in models.keys():
+                        rmse_brits = ((torch.tensor(brits_output, device=device) - c_target) * eval_points) ** 2
+                        rmse_brits = rmse_brits.sum().item() / eval_points.sum().item()
+                        brits_rmse_avg += rmse_brits
         if not data:
             if 'CSDI' in models.keys():
                 results_trials_mse['csdi'][trial] = csdi_rmse_avg / batch_size
