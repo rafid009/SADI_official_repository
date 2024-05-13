@@ -168,15 +168,15 @@ data_folder = f"results_awn_{filename.split('.')[0]}/data"
 miss_ratios = [0.2, 0.5, 0.8]
 for ratio in miss_ratios:
     print(f"\nRandom Missing: ratio ({ratio})")
-    evaluate_imputation_all(models=models, filename=filename, trials=3, mse_folder=mse_folder, dataset_name='awn', batch_size=8, missing_ratio=ratio, random_trial=True, unnormalize=True)
+    evaluate_imputation_all(models=models, filename=filename, trials=3, mse_folder=mse_folder, dataset_name='awn', batch_size=8, missing_ratio=ratio, random_trial=True)
 
 
-pbm = [4]
-for bm in pbm:  
-    partial_bm_config['features'] = bm
-    print(f"features: {partial_bm_config['features']}")
-    # evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='agaid', batch_size=16, test_indices=[32,33], mean=mean, std=std, partial_bm_config=partial_bm_config)
-    evaluate_imputation_all(models=models, filename=filename, trials=1, mse_folder=data_folder, dataset_name='awn', batch_size=1, partial_bm_config=partial_bm_config, data=True, unnormalize=True)
+# pbm = [4]
+# for bm in pbm:  
+#     partial_bm_config['features'] = bm
+#     print(f"features: {partial_bm_config['features']}")
+#     # evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='agaid', batch_size=16, test_indices=[32,33], mean=mean, std=std, partial_bm_config=partial_bm_config)
+#     evaluate_imputation_all(models=models, filename=filename, trials=1, mse_folder=data_folder, dataset_name='awn', batch_size=1, partial_bm_config=partial_bm_config, data=True, unnormalize=True)
 
 
 # lengths = [100, 400, 700]
