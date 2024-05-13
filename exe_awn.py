@@ -79,7 +79,7 @@ train_loader, valid_loader = get_dataloader(n_steps, (filename, filename), batch
 
 config_sadi = {
     'train': {
-        'epochs':1900, # 3000 -> ds3
+        'epochs':2000, # 3000 -> ds3
         'batch_size': 16 ,
         'lr': 1.0e-4
     },      
@@ -98,7 +98,7 @@ config_sadi = {
         'is_unconditional': 0,
         'timeemb': 128,
         'featureemb': 16,
-        'target_strategy': "random", # noise mix
+        'target_strategy': "mix", # noise mix
         'type': 'SAITS',
         'n_layers': 4,
         'loss_weight_p': 1,
@@ -147,16 +147,16 @@ model_filename = f"model_SADI_awn_{filename.split('.')[0]}.pth"
 print(f"\n\SADI training starts.....\n")
 model_folder = "saved_model_awn"
 
-# train(
-#     model_sadi,
-#     config_sadi["train"],
-#     train_loader,
-#     valid_loader=valid_loader,
-#     foldername=model_folder,
-#     filename=f"{model_filename}",
-# )
+train(
+    model_sadi,
+    config_sadi["train"],
+    train_loader,
+    valid_loader=valid_loader,
+    foldername=model_folder,
+    filename=f"{model_filename}",
+)
 
-model_sadi.load_state_dict(torch.load(f"{model_folder}/{model_filename}"))
+# model_sadi.load_state_dict(torch.load(f"{model_folder}/{model_filename}"))
 
 
 models = {
