@@ -70,7 +70,7 @@ n_steps = 672
 n_features = len(given_features)
 # num_seasons = 50
 noise = False
-filename = '100185.csv' # 1: '330141.csv'
+filename = '330141.csv' # '100185.csv' # 1: '330141.csv'
 
 train_loader, valid_loader = get_dataloader(n_steps, (filename, filename), batch_size=8, missing_ratio=0.2, seed=seed)
 
