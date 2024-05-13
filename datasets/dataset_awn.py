@@ -53,7 +53,8 @@ def parse_data(sample, rate=0.3, is_test=False, length=100, include_features=Non
         obs_data = np.nan_to_num(evals, copy=True)
         obs_data = obs_data.reshape(shp)
     elif random_trial:
-        evals = sample.copy()
+        shp = sample.shape
+        evals = sample.reshape(-1).copy()
         values = evals.copy()
         # for i in range(evals.shape[1]):
         #     indices = np.where(~np.isnan(evals[:, i]))[0].tolist()
@@ -68,6 +69,8 @@ def parse_data(sample, rate=0.3, is_test=False, length=100, include_features=Non
         mask = ~np.isnan(values)
         gt_intact = values
         obs_data = np.nan_to_num(evals, copy=True)
+        obs_data = obs_data.reshape(shp)
+        mask = mask.reshape(shp)
     elif partial_bm_config is not None:
         total_features = np.arange(sample.shape[1])
         features = np.random.choice(total_features, partial_bm_config['features'])
