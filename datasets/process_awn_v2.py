@@ -38,7 +38,7 @@ m = 96 * 7
 #     '  SOIL_MOIS_8_IN_%'
 # ]
 
-features = [
+given_features = [
     # 'TSTAMP_PST', 
     # ' UNIT_ID', 
     # ' STATION_NAME', 
@@ -80,10 +80,14 @@ for file in os.listdir(folder):
     if file.endswith('.csv'):
         print(f"file: {file}")
         df = pd.read_csv(f"{folder}/{file}")
-        
-        for feat in features:
-            df[feat] = pd.to_numeric(df[feat], errors='coerce')
-            df[feat] = df[feat].astype('float')
+
+        features = []
+
+        for feat in given_features:
+            if not df[feat].isna().all():
+                features.append(feat)
+                df[feat] = pd.to_numeric(df[feat], errors='coerce')
+                df[feat] = df[feat].astype('float')
 
         x = []
         count = 0
@@ -115,10 +119,16 @@ for file in os.listdir(folder):
         
         if not os.path.isdir(out_folder):
             os.makedirs(out_folder)
+
         np.save(f"{out_folder}/X_{file}.npy", X)
         file_dict[file] = f"X_{file}.npy"
         X = []
         gc.collect()
+
+        with open(f"{out_folder}/{file.split('.')[0]}_features.json", 'w') as output_file:
+	        json.dump(features, output_file)
+        
+        
 with open(f"{out_folder}/train_station_map.json", "w") as outfile: 
     json.dump(file_dict, outfile)
             
