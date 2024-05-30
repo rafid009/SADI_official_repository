@@ -66,7 +66,7 @@ given_features = [
 folder = "./data/AWN/singles"
 filename = '330141.csv' # '100185.csv' # 1: '330141.csv'
 
-with open(f"{folder}/{filename.split(".")[0]}_features.json") as fp:
+with open(f"{folder}/{filename.split('.')[0]}_features.json") as fp:
     given_features = json.load(fp)
 
 print(f"Features: {given_features}")
