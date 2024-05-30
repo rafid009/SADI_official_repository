@@ -63,6 +63,14 @@ given_features = [
     'MSLP_HPA' 
 ]
 
+folder = "./data/AWN/singles"
+filename = '330141.csv' # '100185.csv' # 1: '330141.csv'
+
+with open(f"{folder}/{filename.split(".")[0]}_features.json") as fp:
+    given_features = json.load(fp)
+
+print(f"Features: {given_features}")
+
 seed = np.random.randint(10, 100)
 nsample = 50
 
@@ -70,7 +78,7 @@ n_steps = 672
 n_features = len(given_features)
 # num_seasons = 50
 noise = False
-filename = '330141.csv' # '100185.csv' # 1: '330141.csv'
+
 
 train_loader, valid_loader = get_dataloader(n_steps, (filename, filename), batch_size=8, missing_ratio=0.2, seed=seed)
 
@@ -168,7 +176,7 @@ data_folder = f"results_awn_{filename.split('.')[0]}/data"
 miss_ratios = [0.2, 0.5, 0.8]
 for ratio in miss_ratios:
     print(f"\nRandom Missing: ratio ({ratio})")
-    evaluate_imputation_all(models=models, filename=filename, trials=2, mse_folder=mse_folder, dataset_name='awn', batch_size=8, missing_ratio=ratio, random_trial=True)
+    evaluate_imputation_all(models=models, filename=filename, trials=3, mse_folder=mse_folder, dataset_name='awn', batch_size=8, missing_ratio=ratio, random_trial=True)
 
 
 # pbm = [4]
