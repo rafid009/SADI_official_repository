@@ -155,16 +155,16 @@ model_filename = f"model_SADI_awn_{filename.split('.')[0]}.pth"
 print(f"\n\SADI training starts.....\n")
 model_folder = "saved_model_awn"
 
-# train(
-#     model_sadi,
-#     config_sadi["train"],
-#     train_loader,
-#     valid_loader=valid_loader,
-#     foldername=model_folder,
-#     filename=f"{model_filename}",
-# )
+train(
+    model_sadi,
+    config_sadi["train"],
+    train_loader,
+    valid_loader=valid_loader,
+    foldername=model_folder,
+    filename=f"{model_filename}",
+)
 
-model_sadi.load_state_dict(torch.load(f"{model_folder}/{model_filename}"))
+# model_sadi.load_state_dict(torch.load(f"{model_folder}/{model_filename}"))
 
 
 models = {
