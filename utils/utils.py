@@ -7,6 +7,7 @@ import json
 from json import JSONEncoder
 import os
 from datasets.dataset_synth import get_testloader_synth
+import matplotlib.pyplot as plt
 # from datasets.dataset_awn import get_testloader_AWN
 
 
@@ -32,32 +33,68 @@ def train(
     valid_loader=None,
     valid_epoch_interval=5,
     foldername="",
-    filename=""
+    filename="",
+    is_saits=False,
+    data_type="",
+    pbm_start=-1
 ):
     optimizer = Adam(model.parameters(), lr=config["lr"], weight_decay=1e-6)
     if foldername != "":
-        if not os.path.isdir(foldername):
-            os.makedirs(foldername)
-        output_path = foldername + f"/{filename if len(filename) != 0 else 'model_sadi.pth'}"
+        output_path = foldername + f"/{filename if len(filename) != 0 else 'model_csdi.pth'}"
 
+    # p0 = int(0.6 * config["epochs"])
     p1 = int(0.75 * config["epochs"])
     p2 = int(0.9 * config["epochs"])
-
-    lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
+    p3 = int(0.8 * config["epochs"])
+    # p4 = int(0.7 * config["epochs"])
+    p5 = int(0.6 * config["epochs"])
+    # exp_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
+    if is_saits:
+        if data_type == 'agaid':
+            lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
+                optimizer, milestones=[p1, p2], gamma=0.1
+            )
+        elif data_type == 'pm25':
+            lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
+                optimizer, milestones=[p1, p2], gamma=0.1
+            )
+        else:
+            lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
+                optimizer, milestones=[p1, p2], gamma=0.1
+            )
+        # pa
+    else:
+        lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
         optimizer, milestones=[p1, p2], gamma=0.1
-    )
-
+        )
+    # lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
+    #     optimizer, T_0=1000, T_mult=1, eta_min=1.0e-7
+    #     )
+    # lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', patience=20)
+    losses_y = []
+    best_valid_loss = 1e10
+    epoch_pbm_starts = int(config['epochs'] * pbm_start)
     model.train()
     for epoch_no in range(config["epochs"]):
         avg_loss = 0
-
+        # if epoch_no == 1000:
+        #     torch.save(model.state_dict(), output_path)
+        #     model.load_state_dict(torch.load(f"{output_path}"))
+        # if epoch_no > 1000 and epoch_no % 500 == 0:
+        #     torch.save(model.state_dict(), output_path)
+        #     model.load_state_dict(torch.load(f"{output_path}"))
         with tqdm(train_loader, mininterval=5.0, maxinterval=50.0) as it:
             for batch_no, train_batch in enumerate(it, start=1):
                 optimizer.zero_grad()
-                loss = model(train_batch)
+                # print(f"train data: {train_batch}")
+                if pbm_start != -1 and epoch_no > epoch_pbm_starts:
+                    loss = model(train_batch, pbm=True)
+                else:
+                    loss = model(train_batch)
                 loss.backward()
                 avg_loss += loss.item()
                 optimizer.step()
+                # lr_scheduler.step()
                 it.set_postfix(
                     ordered_dict={
                         "avg_epoch_loss": avg_loss / batch_no,
@@ -65,9 +102,22 @@ def train(
                     },
                     refresh=False,
                 )
-
-            lr_scheduler.step()
-
+            losses_y.append(avg_loss / batch_no)
+            # exp_scheduler.step()
+            # metric = avg_loss / batch_no
+            if is_saits:
+                # if data_type != 'pm25' and data_type != 'synth_v2' and data_type != 'synth_v3':
+                #     lr_scheduler.step()
+                # pass
+                # if data_type == 'electricity':
+                #     pass
+                # else:
+                if data_type != 'nasce' and data_type != 'pm25' and data_type != 'electricity' and data_type != 'synth_v8':
+                    lr_scheduler.step()
+            else:
+                lr_scheduler.step()
+                # pass
+            
         if valid_loader is not None and (epoch_no + 1) % valid_epoch_interval == 0:
             model.eval()
             avg_loss_valid = 0
@@ -85,9 +135,30 @@ def train(
                         )
             torch.save(model.state_dict(), output_path)
             model.train()
+                # print(
+                #     "\n avg loss is now ",
+                #     avg_loss_valid / batch_no,
+                #     "at",
+                #     epoch_no,
+                # )
 
     if filename != "":
         torch.save(model.state_dict(), output_path)
+    # if filename != "":
+    #     torch.save(model.state_dict(), filename)
+    x = np.arange(len(losses_y))
+    folder = f"{foldername}/plots"
+    if not os.path.isdir(folder):
+        os.makedirs(folder)
+    plt.figure(figsize=(16,9))
+    plt.plot(x,losses_y, label='Training Loss')
+    plt.title(f"Training Losses for {data_type}")
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.savefig(f"{folder}/{data_type}_{'pbm' if pbm_start != -1 else 'random'}.png", dpi=300)
+    plt.tight_layout()
+    plt.close()
 
 
 def quantile_loss(target, forecast, q: float, eval_points) -> float:
