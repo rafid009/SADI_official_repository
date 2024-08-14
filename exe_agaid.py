@@ -118,8 +118,8 @@ train_loader, valid_loader, mean, std = get_dataloader(
 # # np.save('agaid_std.npy', std)
 # model_csdi = CSDI_Agaid(config_dict_csdi, device).to(device)
 model_folder = "./saved_model_agaid"
-# if not os.path.isdir(model_folder):
-#     os.makedirs(model_folder)
+if not os.path.isdir(model_folder):
+    os.makedirs(model_folder)
 # filename = f'model_csdi_{miss_type}.pth'
 # train(
 #     model_csdi,
