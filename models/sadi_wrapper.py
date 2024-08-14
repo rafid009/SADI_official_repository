@@ -254,23 +254,22 @@ class SADI_Agaid(SADI_base):
         observed_data = batch["observed_data"].to(self.device).float()
         observed_mask = batch["observed_mask"].to(self.device).float()
         gt_mask = batch["gt_mask"].to(self.device).float()
-        observed_data_intact = batch["obs_data_intact"].to(self.device).float()
-        gt_intact = batch["gt_intact"]#.to(self.device).float()
+        # observed_data_intact = batch["obs_data_intact"].to(self.device).float()
+        # gt_intact = batch["gt_intact"]#.to(self.device).float()
         observed_data = observed_data.permute(0, 2, 1)
         observed_mask = observed_mask.permute(0, 2, 1)
         gt_mask = gt_mask.permute(0, 2, 1)
 
         cut_length = torch.zeros(len(observed_data)).long().to(self.device)
-        for_pattern_mask = observed_mask
 
         return (
             observed_data,
             observed_mask,
             gt_mask,
-            for_pattern_mask,
+            # for_pattern_mask,
             cut_length,
-            observed_data_intact,
-            gt_intact
+            # observed_data_intact,
+            # gt_intact
         )
     
 class SADI_AWN(SADI_base):
@@ -299,7 +298,7 @@ class SADI_AWN(SADI_base):
             # observed_data_intact,
             # gt_intact
         )
-    
+
 class SADI_Synth(SADI_base):
     def __init__(self, config, device, target_dim=6, is_simple=False):
         super(SADI_Synth, self).__init__(target_dim, config, device, is_simple=is_simple)
@@ -322,10 +321,10 @@ class SADI_Synth(SADI_base):
             observed_data,
             observed_mask,
             gt_mask,
-            for_pattern_mask,
+            # for_pattern_mask,
             cut_length,
-            observed_data_intact,
-            gt_intact
+            # observed_data_intact,
+            # gt_intact
         )
     
 

@@ -1,4 +1,4 @@
-from models.main_model import SADI_Synth
+from models.sadi_wrapper import SADI_Synth
 from datasets.dataset_synth import get_dataloader, get_testloader
 from utils.utils import train, get_num_params, calc_quantile_CRPS, evaluate_imputation_all
 import numpy as np
@@ -121,7 +121,7 @@ train(
     filename=f"{filename}"
 )
 
-model_sadi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
+# model_sadi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 
 
 models = {
