@@ -103,7 +103,7 @@ miss_type = 'random'
 # }
 
 # # dataset_name = 'agaid' + '_weather'
-data_file = 'ColdHardiness_Grape_Merlot_2.csv'
+data_file = './data/AgAid/ColdHardiness_Grape_Merlot_2.csv'
 # config_dict_csdi = config_dict_csdi_pattern if miss_type.startswith('pattern') else config_dict_csdi_random
 
 train_loader, valid_loader, mean, std = get_dataloader(
