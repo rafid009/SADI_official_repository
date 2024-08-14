@@ -99,6 +99,28 @@ class SADI_base(nn.Module):
             cond_mask[i, :, start : (start + length - 1)] = 0.0
         return cond_mask
     
+    def get_pbm_mask(self, observed_mask):
+        cond_mask = observed_mask.clone() # B, K, L
+        rand_mask = self.get_randmask(observed_mask)
+        for i in range(observed_mask.shape[0]):
+            mask_choice = np.random.rand()
+            if mask_choice > 0.5:
+                cond_mask[i] = rand_mask[i]
+            else:
+                if cond_mask.shape[1] != 1:
+                    n_features = np.random.randint(1, int(np.round(cond_mask.shape[1]/2)))
+                    feature_indices = np.random.choice(observed_mask.shape[1], size=n_features, replace=False)
+                else:
+                    feature_indices = [0]
+                if observed_mask.shape[2] != 1:
+                    n_time = np.random.randint(1, int(np.round(observed_mask.shape[2]/2)))
+                else:
+                    n_time = 1
+                
+                start_time = np.random.randint(0, observed_mask.shape[2] - n_time + 1)
+                cond_mask[i, feature_indices, start_time:n_time] = 0.0
+        return cond_mask
+    
 
     def calc_loss_valid(
         self, observed_data, cond_mask, observed_mask, is_train
@@ -204,7 +226,7 @@ class SADI_base(nn.Module):
         return imputed_samples
 
 
-    def forward(self, batch, is_train=1):
+    def forward(self, batch, is_train=1, pbm=False):
         (
             observed_data,
             observed_mask,
@@ -221,6 +243,11 @@ class SADI_base(nn.Module):
             cond_mask = self.get_bm_mask(
                 observed_mask
             )
+        elif self.target_strategy == 'pbm':
+            if pbm:
+                cond_mask = self.get_pbm_mask(observed_mask)
+            else:
+                cond_mask = self.get_randmask(observed_mask)
         else:
             cond_mask = self.get_randmask(observed_mask)
 
