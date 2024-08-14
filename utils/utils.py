@@ -7,7 +7,7 @@ import json
 from json import JSONEncoder
 import os
 from datasets.dataset_synth import get_testloader_synth
-from datasets.dataset_awn import get_testloader_AWN
+# from datasets.dataset_awn import get_testloader_AWN
 
 
 from models.sadi_wrapper import SADI_Agaid, SADI_AWN
