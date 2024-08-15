@@ -7,6 +7,7 @@ import json
 from json import JSONEncoder
 import os
 from datasets.dataset_synth import get_testloader_synth
+from datasets.dataset_agaid import get_testloader_agaid
 import matplotlib.pyplot as plt
 # from datasets.dataset_awn import get_testloader_AWN
 
@@ -367,8 +368,8 @@ def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, 
         elif dataset_name == 'synth_v8':
             test_loader = get_testloader_synth(n_steps=100, n_features=3, batch_size=batch_size, num_seasons=16, seed=(s + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, v2='v9', noise=noise, mean=mean, std=std, partial_bm_config=partial_bm_config)
         else:
-            test_loader = get_testloader_AWN(n_steps=96*7, filename=filename, seed=(s + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, batch_size=batch_size, partial_bm_config=partial_bm_config, data=data)
-        
+            test_loader = get_testloader_agaid(seed=(s + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecastig=forecasting, batch_size=batch_size, test_idx=test_indices, mean=mean, std=std, pattern=pattern, partial_bm_config=partial_bm_config)
+
         csdi_rmse_avg = 0
         sadi_rmse_avg = 0
         sadi_median_avg = 0
