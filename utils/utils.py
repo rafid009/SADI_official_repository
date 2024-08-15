@@ -23,6 +23,20 @@ torch.set_printoptions(threshold=torch.inf)
 
 
 def get_num_params(model):
+    """
+    Calculate the total number of trainable parameters in a given PyTorch model.
+
+    Args:
+        model (torch.nn.Module): The PyTorch model for which to calculate the number of parameters.
+
+    Returns:
+        int: The total number of trainable parameters in the model.
+    
+    Example:
+        model = MyModel()
+        total_params = get_num_params(model)
+        print(f"Total trainable parameters: {total_params}")
+    """
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 
@@ -38,6 +52,35 @@ def train(
     data_type="",
     pbm_start=-1
 ):
+    """
+    Train a PyTorch model using a specified training configuration and dataset.
+
+    Args:
+        model (torch.nn.Module): The PyTorch model to be trained.
+        config (dict): Configuration dictionary containing training parameters such as the number of epochs and learning rate.
+        train_loader (DataLoader): DataLoader for the training dataset.
+        valid_loader (DataLoader, optional): DataLoader for the validation dataset. Defaults to None.
+        valid_epoch_interval (int, optional): Interval (in epochs) at which the model is validated. Defaults to 5.
+        foldername (str, optional): Directory where model checkpoints and plots will be saved. Defaults to "".
+        filename (str, optional): Name of the file to save the trained model. Defaults to "".
+        is_saits (bool, optional): Flag to indicate if the model is a SAITS variant, influencing the learning rate scheduler. Defaults to False.
+        data_type (str, optional): Type of dataset used, which may influence specific training behaviors. Defaults to "".
+        pbm_start (float, optional): The proportion of epochs after which partial blackout mode (PBM) is activated. If -1, PBM is not used. Defaults to -1.
+
+    Returns:
+        None
+
+    Description:
+    The `train` function trains a PyTorch model using a specified training configuration and dataset. It supports different learning rate scheduling strategies based on the model type and dataset. The training process includes logging of training and validation losses, saving model checkpoints, and generating loss plots.
+
+    - The function initializes an optimizer (`Adam`) and a learning rate scheduler (`MultiStepLR`), with the schedule depending on the dataset and model type.
+    - It iterates through the specified number of epochs, computing and backpropagating the loss for each batch in the training dataset.
+    - If partial blackout mode (PBM) is activated (controlled by `pbm_start`), the model is trained with this mode after the specified proportion of epochs.
+    - The model is periodically validated based on the `valid_epoch_interval` parameter, and the best model is saved to the specified directory.
+    - After training is complete, the function generates a plot of the training loss over epochs and saves it to the specified directory.
+
+    The function is highly customizable, allowing for various training strategies, including random missing scenarios and partial blackout training, making it suitable for different types of time-series imputation tasks.
+    """
     optimizer = Adam(model.parameters(), lr=config["lr"], weight_decay=1e-6)
     if foldername != "":
         output_path = foldername + f"/{filename if len(filename) != 0 else 'model_csdi.pth'}"
@@ -162,16 +205,61 @@ def train(
 
 
 def quantile_loss(target, forecast, q: float, eval_points) -> float:
+    """
+    Calculate the quantile loss for a given quantile `q`.
+
+    The quantile loss is used to evaluate the accuracy of probabilistic forecasts, particularly in the context of the CRPS calculation.
+    It computes the weighted absolute difference between the forecasted values and the actual target values, adjusted for the specified quantile.
+
+    Args:
+        target (torch.Tensor): The ground truth values.
+        forecast (torch.Tensor): The predicted forecast values.
+        q (float): The quantile to be used in the loss calculation (e.g., 0.05, 0.5).
+        eval_points (torch.Tensor): A mask or indicator tensor specifying the points in the target to be evaluated.
+
+    Returns:
+        float: The computed quantile loss.
+    """
     return 2 * torch.sum(
         torch.abs((forecast - target) * eval_points * ((target <= forecast) * 1.0 - q))
     )
 
 
 def calc_denominator(target, eval_points):
+    """
+    Calculate the denominator for the CRPS calculation.
+
+    This denominator is the sum of the absolute values of the target, masked by `eval_points`.
+    It serves as a normalization factor in the CRPS calculation to ensure the score is properly scaled.
+
+    Args:
+        target (torch.Tensor): The ground truth values.
+        eval_points (torch.Tensor): A mask or indicator tensor specifying the points in the target to be evaluated.
+
+    Returns:
+        torch.Tensor: The calculated denominator for the CRPS.
+    """
     return torch.sum(torch.abs(target * eval_points))
 
 
 def calc_quantile_CRPS(target, forecast, eval_points, mean_scaler, scaler):
+    """
+    Calculate the Continuous Ranked Probability Score (CRPS) using quantile losses.
+
+    The CRPS is a measure of the accuracy of probabilistic forecasts. This function calculates the CRPS by averaging
+    quantile losses across a range of quantiles (0.05 to 0.95). The target and forecast values are first rescaled
+    using the provided mean and standard scalers.
+
+    Args:
+        target (torch.Tensor): The ground truth values.
+        forecast (torch.Tensor): The predicted forecast values.
+        eval_points (torch.Tensor): A mask or indicator tensor specifying the points in the target to be evaluated.
+        mean_scaler (torch.Tensor): The mean scaler used to rescale the data.
+        scaler (torch.Tensor): The standard scaler used to rescale the data.
+
+    Returns:
+        float: The calculated CRPS score.
+    """
     target = target * scaler + mean_scaler
     forecast = forecast * scaler + mean_scaler
 
@@ -197,6 +285,44 @@ class NumpyArrayEncoder(JSONEncoder):
 
 
 def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, trials=3, length=-1, random_trial=False, forecasting=False, missing_ratio=0.01, test_indices=None, data=False, noise=False, filename=None, is_yearly=True, n_steps=366, pattern=None, mean=None, std=None, partial_bm_config=None, exclude_features=None, unnormalize=False):  
+    """
+    Evaluate the performance of various imputation models across different datasets and scenarios.
+
+    Args:
+        models (dict): A dictionary containing the models to evaluate, with keys as model names (e.g., 'CSDI', 'SADI') and values as the respective model objects.
+        mse_folder (str): Path to the directory where the evaluation results (MSE, MAE, CRPS) will be saved.
+        dataset_name (str, optional): The name of the dataset to use for evaluation. Determines the data loader and configuration. Defaults to ''.
+        batch_size (int, optional): Batch size for evaluation. Defaults to 16.
+        trials (int, optional): Number of trials to run for evaluation. Each trial may use different random seeds or data lengths. Defaults to 3.
+        length (int or tuple, optional): Length of the sequence to be used in evaluation. Can be a single integer or a tuple specifying a range. Defaults to -1.
+        random_trial (bool, optional): If True, randomizes certain aspects of the trial, such as the length of the sequence. Defaults to False.
+        forecasting (bool, optional): If True, evaluates models in a forecasting scenario instead of imputation. Defaults to False.
+        missing_ratio (float, optional): The ratio of missing data in the dataset. Defaults to 0.01.
+        test_indices (list, optional): Specific indices to evaluate within the dataset. Defaults to None.
+        data (bool, optional): If True, saves the imputed data for further analysis. Defaults to False.
+        noise (bool, optional): If True, introduces noise into the dataset for evaluation. Defaults to False.
+        filename (str, optional): Filename for loading specific datasets or saving results. Defaults to None.
+        is_yearly (bool, optional): Flag indicating if the data is yearly (used for some datasets). Defaults to True.
+        n_steps (int, optional): Number of steps in the time series, e.g., days in a year for daily data. Defaults to 366.
+        pattern (dict, optional): Specifies the pattern of missing data, if applicable. Defaults to None.
+        mean (float or ndarray, optional): Mean value(s) for data normalization, if applicable. Defaults to None.
+        std (float or ndarray, optional): Standard deviation value(s) for data normalization, if applicable. Defaults to None.
+        partial_bm_config (dict, optional): Configuration for partial blackout mode (PBM), defining features or intervals for PBM. Defaults to None.
+        exclude_features (list, optional): Features to exclude from evaluation, if any. Defaults to None.
+        unnormalize (bool, optional): If True, unnormalizes the data back to its original scale after imputation. Defaults to False.
+
+    Returns:
+        None
+
+    Description:
+    The `evaluate_imputation_all` function evaluates the performance of various time-series imputation models (e.g., CSDI, SADI, SAITS, KNN, MICE, BRITS) across different datasets and scenarios, including forecasting and imputation under partial blackout conditions. The function supports multiple trials to account for variability and randomness in data handling.
+
+    The evaluation metrics include Mean Squared Error (MSE), Mean Absolute Error (MAE), and Continuous Ranked Probability Score (CRPS). The function calculates these metrics over the specified trials and saves the results to the provided directory (`mse_folder`). Additionally, it supports saving the imputed data for further analysis.
+
+    The function is highly configurable, allowing for different datasets, data lengths, randomization, and even noisy data to be tested. It ensures that the models are evaluated fairly by unnormalizing the data when required and applying various data patterns (e.g., missing data scenarios).
+
+    Finally, the results of the evaluations are saved in JSON format for each trial, making it easy to analyze and compare model performance.
+    """
     nsample = 50
     if 'CSDI' in models.keys():
         models['CSDI'].eval()

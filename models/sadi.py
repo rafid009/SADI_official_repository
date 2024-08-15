@@ -7,25 +7,27 @@ from utils.transformer import EncoderLayer, PositionalEncoding
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
-def Conv1d_with_init(in_channels, out_channels, kernel_size):
-    layer = nn.Conv1d(in_channels, out_channels, kernel_size)
-    nn.init.kaiming_normal_(layer.weight)
-    return layer
-
-def Conv1d_with_init_saits(in_channels, out_channels, kernel_size):
-    layer = nn.Conv1d(in_channels, out_channels, kernel_size)
-    # layer = nn.utils.weight_norm(layer)
-    nn.init.kaiming_normal_(layer.weight)
-    return layer
-
-def Conv2d_with_init(in_channels, out_channels, kernel_size):
-    layer = nn.Conv2d(in_channels, out_channels, kernel_size, padding='same')
-    nn.init.kaiming_normal_(layer.weight)
-    return layer
-
-
 class DiffusionEmbedding(nn.Module):
+    """
+    The DiffusionEmbedding class provides a learnable embedding for diffusion steps in a diffusion model.
+    It embeds each diffusion step into a higher-dimensional space, allowing the model to effectively utilize 
+    information about the progression of the diffusion process.
+
+    Attributes:
+        embedding (torch.Tensor): A table containing the sinusoidal and cosinusoidal embeddings for each diffusion step.
+        projection1 (nn.Linear): A linear layer that projects the embedding to the specified projection dimension.
+        projection2 (nn.Linear): A second linear layer that further processes the projected embedding.
+    """
     def __init__(self, num_steps, embedding_dim=128, projection_dim=None):
+        """
+        Initializes the DiffusionEmbedding class by setting up the embedding and projection layers.
+
+        Args:
+            num_steps (int): The number of diffusion steps to embed.
+            embedding_dim (int, optional): The dimension of the initial embedding space. Default is 128.
+            projection_dim (int, optional): The dimension to which the embedding will be projected. 
+                                            If not provided, it defaults to the same value as embedding_dim.
+        """
         super().__init__()
         if projection_dim is None:
             projection_dim = embedding_dim
@@ -38,6 +40,15 @@ class DiffusionEmbedding(nn.Module):
         self.projection2 = nn.Linear(projection_dim, projection_dim)
 
     def forward(self, diffusion_step):
+        """
+        Performs a forward pass through the DiffusionEmbedding module, transforming the diffusion step into its embedded representation.
+
+        Args:
+            diffusion_step (torch.Tensor): A tensor representing the current diffusion step(s).
+
+        Returns:
+            torch.Tensor: The embedded representation of the diffusion step, after being processed through two projection layers and activation functions.
+        """
         x = self.embedding[diffusion_step]
         x = self.projection1(x)
         x = F.silu(x)
@@ -46,6 +57,16 @@ class DiffusionEmbedding(nn.Module):
         return x
 
     def _build_embedding(self, num_steps, dim=64):
+        """
+        Constructs the sinusoidal and cosinusoidal embedding table for the diffusion steps.
+
+        Args:
+            num_steps (int): The number of diffusion steps for which embeddings are created.
+            dim (int, optional): The dimension of the sinusoidal/cosinusoidal embedding space. Default is 64.
+
+        Returns:
+            torch.Tensor: A tensor containing the sinusoidal and cosinusoidal embeddings for each diffusion step, with shape (num_steps, dim * 2).
+        """
         steps = torch.arange(num_steps).unsqueeze(1)  # (T,1)
         frequencies = 10.0 ** (torch.arange(dim) / (dim - 1) * 4.0).unsqueeze(0)  # (1,dim)
         table = steps * frequencies  # (T,dim)
@@ -54,9 +75,35 @@ class DiffusionEmbedding(nn.Module):
     
 
 def Conv1d_with_init_saits_new(in_channels, out_channels, kernel_size, init_zero=False, dilation=1):
+    """
+    Creates a 1D convolutional layer with custom initialization for the weights.
+
+    Args:
+        in_channels (int): Number of channels in the input signal.
+        out_channels (int): Number of channels produced by the convolution.
+        kernel_size (int): Size of the convolutional kernel (filter).
+        init_zero (bool, optional): If True, initializes the convolutional weights to zero. 
+                                    If False, uses Kaiming normal initialization. Defaults to False.
+        dilation (int, optional): Spacing between kernel elements (dilation rate). Defaults to 1.
+
+    Returns:
+        nn.Conv1d: A 1D convolutional layer with the specified initialization.
+
+    Description:
+        The function creates a 1D convolutional layer (`nn.Conv1d`) with the specified number of input and output channels,
+        kernel size, and dilation rate. The padding is calculated based on the kernel size and dilation to ensure that 
+        the output size is the same as the input size (if stride is 1).
+
+        The function allows for two types of weight initialization:
+        - If `init_zero` is True, the weights are initialized to zero.
+        - If `init_zero` is False, Kaiming normal initialization is applied to the weights.
+
+    Example:
+        layer = Conv1d_with_init_saits_new(in_channels=16, out_channels=32, kernel_size=3, init_zero=True)
+    """
     padding = dilation * ((kernel_size - 1)//2)
     layer = nn.Conv1d(in_channels, out_channels, kernel_size, dilation=dilation, padding=padding)
-    # layer = nn.utils.weight_norm(layer)
+
     if init_zero:
         nn.init.zeros_(layer.weight)
     else:
@@ -65,8 +112,42 @@ def Conv1d_with_init_saits_new(in_channels, out_channels, kernel_size, init_zero
 
 
 class GTA(nn.Module):
+    """
+    The GTA (Gated Temporal Attention) class is a neural network module designed for time-series data processing, 
+    specifically to handle the temporal and feature dimensions in a diffusion model. It incorporates multiple 
+    layers of attention and convolutional operations, allowing the model to effectively capture complex dependencies 
+    across time steps and features.
+
+    Attributes:
+        enc_layer_1 (EncoderLayer): The first encoder layer used for initial attention over time and features.
+        enc_layer_2 (EncoderLayer): The second encoder layer used for further attention and processing.
+        diffusion_projection (nn.Linear): A linear layer for projecting diffusion embeddings into the channel space.
+        init_proj (nn.Conv1d): A convolutional layer for initial projection of the input noise.
+        conv_layer (nn.Conv1d): A convolutional layer for transforming the projected input.
+        cond_proj (nn.Conv1d): A convolutional layer for initial projection of the conditioning data.
+        conv_cond (nn.Conv1d): A convolutional layer for transforming the projected conditioning data.
+        res_proj (nn.Conv1d): A convolutional layer for projecting the output back to the original feature space.
+        skip_proj (nn.Conv1d): A convolutional layer for producing the skip connection.
+    """
     def __init__(self, channels, d_time, actual_d_feature, d_model, d_inner, n_head, d_k, d_v, dropout,
             diffusion_embedding_dim=128, diagonal_attention_mask=True) -> None:
+        """
+        Initializes the GTA module by setting up the layers and projections required for processing
+        the time-series data and diffusion embeddings.
+
+        Args:
+            channels (int): The number of channels used in the convolutional layers.
+            d_time (int): The dimension of the time axis in the attention mechanism.
+            actual_d_feature (int): The actual dimension of features in the input data.
+            d_model (int): The dimension of the input model.
+            d_inner (int): The inner dimension in the encoder layers.
+            n_head (int): The number of attention heads in the encoder layers.
+            d_k (int): The dimension of the key in the attention mechanism.
+            d_v (int): The dimension of the value in the attention mechanism.
+            dropout (float): The dropout rate applied to the attention mechanism.
+            diffusion_embedding_dim (int, optional): The dimension of the diffusion embedding. Defaults to 128.
+            diagonal_attention_mask (bool, optional): Whether to use a diagonal mask in the attention mechanism. Defaults to True.
+        """
         super().__init__()
 
         # combi 2
@@ -89,6 +170,22 @@ class GTA(nn.Module):
 
 
     def forward(self, x, cond, diffusion_emb):
+        """
+        Forward pass for the GTA module. This method processes the input noise (x), conditioning data (cond),
+        and diffusion embeddings (diffusion_emb) through multiple layers of attention and convolution.
+
+        Args:
+            x (torch.Tensor): The input noise tensor of shape (B, L, K), where B is the batch size, 
+                              L is the sequence length (time dimension), and K is the number of features.
+            cond (torch.Tensor): The conditioning data tensor of shape (B, L, K).
+            diffusion_emb (torch.Tensor): The diffusion embedding tensor of shape (B, embedding_dim).
+
+        Returns:
+            tuple:
+                - torch.Tensor: The processed output tensor with residual connections.
+                - torch.Tensor: The skip connection tensor.
+                - torch.Tensor: The attention weights averaged over the two encoder layers.
+        """
         # x Noise
         # L -> time
         # K -> feature
@@ -137,8 +234,56 @@ class GTA(nn.Module):
 
 
 class SADI(nn.Module):
+    """
+    The SADI (Self-Attention Diffusion Imputation) class is a neural network model designed for imputing missing data 
+    in time-series datasets. The model leverages a combination of temporal and feature-based attention mechanisms, 
+    as well as a diffusion process to generate accurate imputations. It is highly configurable, supporting various 
+    architectural choices and ablation settings.
+
+    Attributes:
+        n_layers (int): The number of layers in the first and second blocks of the model.
+        is_simple (bool): A flag indicating whether a simplified version of the model is used.
+        d_feature (int): The dimension of the feature space in the input data.
+        ablation_config (dict): Configuration dictionary for various ablation settings.
+        d_time (int): The dimension of the time axis in the attention mechanism.
+        n_head (int): The number of attention heads in the encoder layers.
+        layer_stack_for_first_block (nn.ModuleList): A stack of `GTA` layers used in the first block.
+        layer_stack_for_second_block (nn.ModuleList, optional): A stack of `GTA` layers used in the second block (if enabled).
+        diffusion_embedding (DiffusionEmbedding): Embedding for the diffusion process.
+        dropout (nn.Dropout): Dropout layer to apply regularization.
+        position_enc_cond (PositionalEncoding): Positional encoding for the conditioning data.
+        position_enc_noise (PositionalEncoding): Positional encoding for the noise data.
+        embedding_1 (nn.Linear): Linear layer for embedding the input data for the first block.
+        embedding_cond (nn.Linear): Linear layer for embedding the conditioning data.
+        reduce_skip_z (nn.Linear): Linear layer to reduce the dimension of the skip connections.
+        weight_combine (nn.Linear, optional): Linear layer to combine weights from the first and second blocks.
+        mask_conv (nn.Conv1d): Convolutional layer used in the Feature Dependency Encoder (FDE).
+        layer_stack_for_feature_weights (nn.ModuleList): A stack of `EncoderLayer` layers used in the FDE.
+        fde_pos_enc (PositionalEncoding, optional): Positional encoding applied to the FDE output.
+        fde_time_pos_enc (PositionalEncoding, optional): Time-based positional encoding applied to the FDE output.
+    """
     def __init__(self, diff_steps, diff_emb_dim, n_layers, d_time, d_feature, d_model, d_inner, n_head, d_k, d_v,
             dropout, diagonal_attention_mask=True, is_simple=False, ablation_config=None):
+        """
+        Initializes the SADI model with the specified configuration, setting up the necessary layers 
+        and attention mechanisms for processing time-series data and imputing missing values.
+
+        Args:
+            diff_steps (int): The number of diffusion steps in the model.
+            diff_emb_dim (int): The dimension of the diffusion embedding.
+            n_layers (int): The number of layers in the first and second blocks of the model.
+            d_time (int): The dimension of the time axis in the attention mechanism.
+            d_feature (int): The dimension of the feature space in the input data.
+            d_model (int): The dimension of the input model.
+            d_inner (int): The inner dimension in the encoder layers.
+            n_head (int): The number of attention heads in the encoder layers.
+            d_k (int): The dimension of the key in the attention mechanism.
+            d_v (int): The dimension of the value in the attention mechanism.
+            dropout (float): The dropout rate applied to the attention mechanism.
+            diagonal_attention_mask (bool, optional): Whether to use a diagonal mask in the attention mechanism. Defaults to True.
+            is_simple (bool, optional): Flag indicating whether a simplified version of the model is used. Defaults to False.
+            ablation_config (dict, optional): Configuration dictionary for various ablation settings. Defaults to None.
+        """
         super().__init__()
         self.n_layers = n_layers
         actual_d_feature = d_feature * 2
@@ -217,6 +362,51 @@ class SADI(nn.Module):
 
     # ds3
     def forward(self, inputs, diffusion_step):
+        """
+        Forward pass for the SADI model. Processes the input data through various attention and diffusion mechanisms
+        to impute missing values in the time-series data.
+
+        Args:
+            inputs (dict): A dictionary containing the input time-series data and the missing mask. 
+                           - 'X': The input time-series data of shape (B, 2, L, K), where B is the batch size,
+                             L is the sequence length, and K is the number of features.
+                           - 'missing_mask': The mask indicating missing values in the input data.
+            diffusion_step (torch.Tensor): The diffusion step tensor representing the current step in the diffusion process.
+
+        Returns:
+            tuple:
+                - torch.Tensor: The output tensor from the first block of the model, potentially including residual and skip connections.
+                - torch.Tensor: The output tensor from the second block of the model (if applicable), representing further refined imputation results.
+                - torch.Tensor: The final output tensor after combining results from both blocks (if applicable) or from the first block alone.
+
+        Description:
+            The forward method performs the following operations:
+
+            1. **Input Preparation**: The input time-series data and the corresponding missing mask are processed and 
+               transposed to match the expected input format for the convolutional and attention layers.
+
+            2. **Feature Dependency Encoder (FDE)**: If enabled by the ablation configuration, the model first processes 
+               the input through a Feature Dependency Encoder to capture global correlations between features over time. 
+               The output of this step is a feature attention/dependency matrix, which is used to enhance the imputation.
+
+            3. **First Block of GTA Layers**: The input data is then passed through a stack of `GTA` (Gated Temporal Attention) 
+               layers in the first block, where temporal and feature-based attention mechanisms are applied. 
+               The output includes skip connections which are aggregated across all layers in the block.
+
+            4. **Second Block of GTA Layers**: If the second block is enabled (based on the ablation configuration), the 
+               output of the first block is further processed through a second stack of `GTA` layers. 
+               The results from this block are combined with those from the first block to produce refined imputations.
+
+            5. **Weight Combination**: If the weight combination mechanism is enabled, the model combines the results 
+               from the first and second blocks using a learned set of weights, which are determined by the attention 
+               weights and the missing mask.
+
+            6. **Output**: Finally, the method returns the outputs from the first block, the second block (if applicable), 
+               and the combined result. The output represents the imputed time-series data with missing values filled in.
+
+        Example:
+            skips_tilde_1, skips_tilde_2, skips_tilde_3 = model.forward(inputs={'X': time_series_data, 'missing_mask': mask}, diffusion_step=step)
+        """
         X, masks = inputs['X'], inputs['missing_mask']
         masks[:,1,:,:] = masks[:,0,:,:]
         # B, L, K -> B=batch, L=time, K=feature

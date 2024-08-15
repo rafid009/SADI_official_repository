@@ -2,16 +2,6 @@
 
 This repository contains the implementation of **SADI (Self-Attention-based Diffusion Model for Time-Series Imputation)**, a state-of-the-art model designed to handle missing data in multivariate time-series datasets. SADI leverages feature and temporal correlations to provide high-quality imputation, outperforming existing models in both accuracy and efficiency.
 
-## Table of Contents
-- [Introduction](#introduction)
-- [Features](#features)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Datasets](#datasets)
-- [Experiments](#experiments)
-- [Results](#results)
-- [Citation](#citation)
-- [License](#license)
 
 ## Introduction
 SADI addresses the challenge of missing data in time-series datasets by explicitly modeling both feature and temporal dependencies. It introduces an innovative two-stage imputation process that enhances the accuracy of imputed values. This repository includes the code for training, evaluating, and experimenting with the SADI model.
@@ -29,6 +19,10 @@ SADI addresses the challenge of missing data in time-series datasets by explicit
 - NumPy
 - Pandas
 - Matplotlib
+
+## GPU Resource used:
+- Tesla V100-SXM3-32GB
+- CUDA 11.3+
 
 ## Example code run
 ### For synthetic datasets:
