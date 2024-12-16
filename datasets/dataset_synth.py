@@ -16,7 +16,6 @@ def parse_data(sample, rate=0.3, is_test=False, length=100, include_features=Non
     if pattern is not None:
         shp = sample.shape
         choice = np.random.randint(low=pattern['start'], high=(pattern['start'] + pattern['num_patterns'] - 1))
-        # print(f"start: {pattern['start']} end: {(pattern['start'] + pattern['num_patterns'] - 1)} choice: {choice}")
         filename = f"{pattern['pattern_dir']}/pattern_{choice}.npy"
         mask = np.load(filename)
         mask = mask * obs_mask
@@ -76,9 +75,7 @@ def parse_data(sample, rate=0.3, is_test=False, length=100, include_features=Non
         shp = sample.shape
         evals = sample.reshape(-1).copy()
         a = np.arange(sample.shape[0] - length)
-        # print(f"a: {a}\nsample: {sample.shape}")
         start_idx = np.random.choice(a)
-        # print(f"random choice: {start_idx}")
         end_idx = start_idx + length
         obs_data_intact = sample.copy()
         if include_features is None or len(include_features) == 0:
@@ -89,8 +86,7 @@ def parse_data(sample, rate=0.3, is_test=False, length=100, include_features=Non
         gt_intact = obs_data_intact
         obs_data = np.nan_to_num(evals, copy=True)
         obs_data = obs_data.reshape(shp)
-        # obs_intact = np.nan_to_num(obs_intact, copy=True)
-    # print(f"\n\nobs data 1: {obs_data}")
+
     return obs_data, obs_mask, mask, sample, gt_intact
 
 class Synth_Dataset(Dataset):
@@ -145,7 +141,6 @@ class Synth_Dataset(Dataset):
         self.obs_data_intact = np.array(self.obs_data_intact)
         self.gt_intact = np.array(self.gt_intact)
         self.observed_masks = torch.tensor(np.array(self.observed_masks), dtype=torch.float32)
-        # print(f"obs mask: {self.observed_values}\n\nmean: {}")
         self.observed_values = ((self.observed_values - self.mean) / self.std) * self.observed_masks
         self.obs_data_intact = ((self.obs_data_intact - self.mean) / self.std) * self.observed_masks.numpy()
         self.gt_intact = ((self.gt_intact - self.mean) / self.std) * self.gt_masks.numpy()
@@ -155,7 +150,6 @@ class Synth_Dataset(Dataset):
         s = {
             "observed_data": self.observed_values[index],
             "observed_mask": self.observed_masks[index],
-            # "gt_mask": self.gt_masks[index],
             "obs_data_intact": self.obs_data_intact[index],
             "timepoints": np.arange(self.eval_length),
             "gt_intact": self.gt_intact[index]

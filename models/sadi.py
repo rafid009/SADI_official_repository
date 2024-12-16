@@ -263,7 +263,7 @@ class SADI(nn.Module):
         fde_time_pos_enc (PositionalEncoding, optional): Time-based positional encoding applied to the FDE output.
     """
     def __init__(self, diff_steps, diff_emb_dim, n_layers, d_time, d_feature, d_model, d_inner, n_head, d_k, d_v,
-            dropout, diagonal_attention_mask=True, is_simple=False, ablation_config=None):
+            dropout, diagonal_attention_mask=False, is_simple=False, ablation_config=None):
         """
         Initializes the SADI model with the specified configuration, setting up the necessary layers 
         and attention mechanisms for processing time-series data and imputing missing values.
@@ -280,7 +280,7 @@ class SADI(nn.Module):
             d_k (int): The dimension of the key in the attention mechanism.
             d_v (int): The dimension of the value in the attention mechanism.
             dropout (float): The dropout rate applied to the attention mechanism.
-            diagonal_attention_mask (bool, optional): Whether to use a diagonal mask in the attention mechanism. Defaults to True.
+            diagonal_attention_mask (bool, optional): Whether to use a diagonal mask in the attention mechanism. Defaults to False.
             is_simple (bool, optional): Flag indicating whether a simplified version of the model is used. Defaults to False.
             ablation_config (dict, optional): Configuration dictionary for various ablation settings. Defaults to None.
         """

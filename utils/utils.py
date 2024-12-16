@@ -296,7 +296,7 @@ def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, 
         batch_size (int, optional): Batch size for evaluation. Defaults to 16.
         trials (int, optional): Number of trials to run for evaluation. Each trial may use different random seeds or data lengths. Defaults to 3.
         length (int or tuple, optional): Length of the sequence to be used in evaluation. Can be a single integer or a tuple specifying a range. Defaults to -1.
-        random_trial (bool, optional): If True, randomizes certain aspects of the trial, such as the length of the sequence. Defaults to False.
+        random_trial (bool, optional): If True, evaluates on random missing scenario. Defaults to False.
         forecasting (bool, optional): If True, evaluates models in a forecasting scenario instead of imputation. Defaults to False.
         missing_ratio (float, optional): The ratio of missing data in the dataset. Defaults to 0.01.
         test_indices (list, optional): Specific indices to evaluate within the dataset. Defaults to None.
@@ -346,7 +346,7 @@ def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, 
         range_len = None
     if data:
         trials = 1
-    s = 10 #np.random.randint(0,100)
+    s = 10
     for trial in range(trials):
         if forecasting and not data and range_len is not None:
             length = np.random.randint(low=range_len[0], high=range_len[1] + 1)

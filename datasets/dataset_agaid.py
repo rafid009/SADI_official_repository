@@ -16,17 +16,11 @@ def parse_data(sample, rate=0.2, is_test=False, length=100, include_features=Non
     if pattern is not None:
         shp = sample.shape
         choice = np.random.randint(low=pattern['start'], high=(pattern['start'] + pattern['num_patterns'] - 1))
-        # print(f"start: {pattern['start']} end: {(pattern['start'] + pattern['num_patterns'] - 1)} choice: {choice}")
         filename = f"{pattern['pattern_dir']}/pattern_{choice}.npy"
         mask = np.load(filename)
         mask = mask * obs_mask
         evals = sample.reshape(-1).copy()
-        
-        # while ((obs_mask == mask).all()):
-        #     choice = np.random.randint(low=pattern['start'], high=(pattern['start'] + pattern['num_patterns'] - 1))
-        #     print(f"start: {pattern['start']} end: {(pattern['start'] + pattern['num_patterns'] - 1)} choice: {choice}")
-        #     filename = f"{pattern['pattern_dir']}/pattern_{choice}.npy"
-        #     mask = np.load(filename)
+    
         
         eval_mask = mask.reshape(-1).copy()
         gt_indices = np.where(eval_mask)[0].tolist()
@@ -136,10 +130,9 @@ class Agaid_Dataset(Dataset):
         self.gt_masks = []
         self.gt_intact = []
         
-        self.mean = torch.from_numpy(mean) #, dtype=torch.float32)
-        self.std = torch.from_numpy(std) #, dtype=torch.float32)
+        self.mean = torch.from_numpy(mean) 
+        self.std = torch.from_numpy(std) 
 
-        # print(f"X: {X.shape} in {'Test' if is_test else 'Train'}")
         
         include_features = []
         if exclude_features is not None:
@@ -170,7 +163,6 @@ class Agaid_Dataset(Dataset):
         s = {
             "observed_data": self.observed_values[index],
             "observed_mask": self.observed_masks[index],
-            # "gt_mask": self.gt_masks[index],
             "obs_data_intact": self.obs_data_intact[index],
             "timepoints": np.arange(self.eval_length),
             "gt_intact": self.gt_intact[index]
@@ -185,17 +177,12 @@ class Agaid_Dataset(Dataset):
         return len(self.observed_values)
 
         
-def get_dataloader(filename='./data/AgAid/ColdHardiness_Grape_Merlot_2.csv', batch_size=16, missing_ratio=0.2, seed=10, is_test=False, season_idx=-1, random_trial=False):
+def get_dataloader(filename='./data/agaid/ColdHardiness_Grape_Merlot_2.csv', batch_size=16, missing_ratio=0.2, seed=10, is_test=False, season_idx=-1, random_trial=False):
     np.random.seed(seed=seed)
     df = pd.read_csv(filename)
     modified_df, dormant_seasons = preprocess_missing_values(df, features, is_dormant=True)
     season_df, season_array, max_length = get_seasons_data(modified_df, dormant_seasons, features, is_dormant=True)
-    # if season_idx is not None:
-    #     train_season_df = season_df.drop(season_array[season_idx], axis=0)
-    # else:
-    #     train_season_df = season_df.drop(season_array[-1], axis=0)
-    #     train_season_df = train_season_df.drop(season_array[-2], axis=0)
-    # mean, std = get_mean_std(train_season_df, features)
+
     X, Y = split_XY(season_df, max_length, season_array, features)
 
     train_X = []
@@ -208,7 +195,7 @@ def get_dataloader(filename='./data/AgAid/ColdHardiness_Grape_Merlot_2.csv', bat
     train_X = np.array(train_X)
     train_X_real = np.reshape(train_X, (-1, len(features)))
     mean, std = np.nanmean(train_X_real, axis=0), np.nanstd(train_X_real, axis=0)
-    # print(f"mean: {mean}\nstd: {std}")
+
     train_dataset = Agaid_Dataset(train_X, mean, std, rate=missing_ratio)
     test_dataset = Agaid_Dataset(test_X, mean, std, rate=missing_ratio, is_test=is_test)
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
@@ -219,7 +206,7 @@ def get_dataloader(filename='./data/AgAid/ColdHardiness_Grape_Merlot_2.csv', bat
         test_loader = DataLoader(test_dataset, batch_size=len(test_dataset))
     return train_loader, test_loader, mean, std
 
-def get_testloader(filename='./data/AgAid/ColdHardiness_Grape_Merlot_2.csv', missing_ratio=0.2, seed=10, season_idx=None, exclude_features=None, length=100, forward_trial=-1, lte_idx=None, random_trial=False, forecastig=False):
+def get_testloader(filename='./data/agaid/ColdHardiness_Grape_Merlot_2.csv', missing_ratio=0.2, seed=10, season_idx=None, exclude_features=None, length=100, forward_trial=-1, lte_idx=None, random_trial=False, forecastig=False):
     np.random.seed(seed=seed)
     df = pd.read_csv(filename)
     modified_df, dormant_seasons = preprocess_missing_values(df, features, is_dormant=True)
@@ -230,7 +217,7 @@ def get_testloader(filename='./data/AgAid/ColdHardiness_Grape_Merlot_2.csv', mis
         train_season_df = season_df.drop(season_array[-1], axis=0)
         train_season_df = train_season_df.drop(season_array[-2], axis=0)
     mean, std = get_mean_std(train_season_df, features)
-    # print(f"mean: {mean}\nstd: {std}")
+
     X, Y = split_XY(season_df, max_length, season_array, features)
     X = np.expand_dims(X[season_idx], 0)
     if forecastig:
@@ -244,14 +231,12 @@ def get_forward_testloader(X, mean, std, forward_trial=-1, lte_idx=None):
     test_loader = DataLoader(test_dataset, batch_size=1)
     return test_loader
 
-def get_testloader_agaid(filename='./data/AgAid/ColdHardiness_Grape_Merlot_2.csv', batch_size=16, missing_ratio=0.2, seed=10, exclude_features=None, length=100, forward_trial=-1, random_trial=False, forecastig=False, mean=None, std=None, test_idx=-1, pattern=None, partial_bm_config=None):
+def get_testloader_agaid(filename='./data/agaid/ColdHardiness_Grape_Merlot_2.csv', batch_size=16, missing_ratio=0.2, seed=10, exclude_features=None, length=100, forward_trial=-1, random_trial=False, forecastig=False, mean=None, std=None, test_idx=-1, pattern=None, partial_bm_config=None):
     np.random.seed(seed=seed)
     df = pd.read_csv(filename)
     modified_df, dormant_seasons = preprocess_missing_values(df, features, is_dormant=True)
     season_df, season_array, max_length = get_seasons_data(modified_df, dormant_seasons, features, is_dormant=True)
 
-    # train_season_df = season_df.drop(season_array[-1], axis=0)
-    # train_season_df = train_season_df.drop(season_array[-2], axis=0)
     X, Y = split_XY(season_df, max_length, season_array, features)
     X = X[test_idx]
     if len(X.shape) < 3:
