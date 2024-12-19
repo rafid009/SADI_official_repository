@@ -6,6 +6,8 @@ This repository contains the implementation of **SADI (Self-Attention-based Diff
 ## Introduction
 SADI addresses the challenge of missing data in time-series datasets by explicitly modeling both feature and temporal dependencies. It introduces an innovative two-stage imputation process that enhances the accuracy of imputed values. This repository includes the code for training, evaluating, and experimenting with the SADI model.
 
+![Model Arhitecture Diagram](./images/diffsaits_methodology_1.png)
+
 ## Features
 - **Self-Attention Mechanism**: Captures complex feature and temporal dependencies in time-series data.
 - **Two-Stage Imputation Process**: Refines initial imputations to improve overall imputation quality.
