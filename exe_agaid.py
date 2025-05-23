@@ -93,7 +93,7 @@ name = config_dict_sadi['name'] #+ "_weather"
 print(config_dict_sadi)
 # model_diff_saits_simple = CSDI_Agaid(config_dict, device, is_simple=True).to(device)
 model_sadi = SADI_Agaid(config_dict_sadi, device, is_simple=False).to(device)
-filename = f'model_diff_saits_{name}.pth'
+filename = f'model_sadi_{name}.pth'
 
 # model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 # 
@@ -225,66 +225,3 @@ for ratio in miss_ratios:
     evaluate_imputation_all(models=models, trials=10, mse_folder=mse_folder, dataset_name='agaid', batch_size=16, missing_ratio=ratio, random_trial=True, test_indices=[32,33], mean=mean, std=std, rmse=True)
     # evaluate_imputation(models, mse_folder=data_folder, random_trial=True, trials=1, data=True, missing_ratio=ratio)
     # evaluate_imputation_all(models=models, mse_folder=data_folder, dataset_name='agaid', trials=1, batch_size=1, data=True, missing_ratio=ratio, test_indices=[33], random_trial=True, mean=mean, std=std)
-
-
-# print("For All")
-# for l in lengths:
-#     print(f"For length: {l}")
-#     # evaluate_imputation(models, mse_folder, length=l, trials=1, season_idx=33)
-#     print(f"Blackout Missing:\n")
-#     evaluate_imputation(models, mse_folder, length=l, trials=10, season_idx=33)
-#     evaluate_imputation(models, data_folder, length=l, trials=1, data=True)
-#     print(f"Forecasting:\n")
-#     evaluate_imputation(models, mse_folder, length=l, trials=1, season_idx=33, forecasting=True)
-#     evaluate_imputation(models, mse_folder=data_folder, length=l, forecasting=True, trials=1, data=True)
-#     print(f"Random Missing:\n")
-#     evaluate_imputation(models, mse_folder, length=l, trials=10, season_idx=33, random_trial=True)
-#     evaluate_imputation(models, mse_folder=data_folder, length=l, random_trial=True, trials=1, data=True)
-
-    # evaluate_imputation_data(models, length=l)
-
-# feature_combinations = {
-    # "temp": ["MEAN_AT", "MIN_AT", "AVG_AT", "MAX_AT"],
-    # "hum": ["AVG_REL_HUMIDITY", "MIN_REL_HUMIDITY", "MAX_REL_HUMIDITY"],
-    # "dew": ["AVG_DEWPT", "MIN_DEWPT", "MAX_DEWPT"],
-    # "pinch": ["P_INCHES"],
-    # "wind": ["WS_MPH", "MAX_WS_MPH"],
-    # "sr": ["SR_WM2"],q
-    # "leaf": ["LW_UNITY"],
-    # "et": ["ETO", "ETR"],
-    # "st": ["ST8", "MIN_ST8", "MAX_ST8"],
-#     "temp-hum": ["MEAN_AT", "MIN_AT", "AVG_AT", "MAX_AT", "AVG_REL_HUMIDITY", "MIN_REL_HUMIDITY",
-#          "MAX_REL_HUMIDITY"],
-#     "temp-hum-dew": ["MEAN_AT", "MIN_AT", "AVG_AT", "MAX_AT", "AVG_REL_HUMIDITY", "MIN_REL_HUMIDITY",
-#          "MAX_REL_HUMIDITY", "AVG_DEWPT", "MIN_DEWPT", "MAX_DEWPT"],
-#     "for-lte": ["MEAN_AT", "MIN_AT", "AVG_AT", "MAX_AT", "AVG_REL_HUMIDITY", "MIN_REL_HUMIDITY",
-#          "MAX_REL_HUMIDITY", "AVG_DEWPT", "MIN_DEWPT", "MAX_DEWPT", "P_INCHES", "WS_MPH", "MAX_WS_MPH",
-#          "SR_WM2", "LW_UNITY", "ETO", "ETR", "ST8", "MIN_ST8", "MAX_ST8"],
-#     "for-temp": ["AVG_REL_HUMIDITY", "MIN_REL_HUMIDITY", "MAX_REL_HUMIDITY", "AVG_DEWPT", "MIN_DEWPT",
-#          "MAX_DEWPT", "P_INCHES", "WS_MPH", "MAX_WS_MPH",
-#          "SR_WM2", "LW_UNITY", "ETO", "ETR", "ST8", "MIN_ST8", "MAX_ST8"],
-#     "for-hum": ["MEAN_AT", "MIN_AT", "AVG_AT", "MAX_AT", 
-#          "AVG_DEWPT", "MIN_DEWPT", "MAX_DEWPT", "P_INCHES", "WS_MPH", "MAX_WS_MPH",
-#          "SR_WM2", "LW_UNITY", "ETO", "ETR", "ST8", "MIN_ST8", "MAX_ST8"],
-#     "for-dew": ["MEAN_AT", "MIN_AT", "AVG_AT", "MAX_AT", "AVG_REL_HUMIDITY", "MIN_REL_HUMIDITY",
-#          "MAX_REL_HUMIDITY", "P_INCHES", "WS_MPH", "MAX_WS_MPH",
-#          "SR_WM2", "LW_UNITY", "ETO", "ETR", "ST8", "MIN_ST8", "MAX_ST8"],
-#     "for-et": ["MEAN_AT", "MIN_AT", "AVG_AT", "MAX_AT", "AVG_REL_HUMIDITY", "MIN_REL_HUMIDITY",
-#          "MAX_REL_HUMIDITY", "AVG_DEWPT", "MIN_DEWPT", "MAX_DEWPT", "P_INCHES", "WS_MPH", "MAX_WS_MPH",
-#          "SR_WM2", "LW_UNITY", "ST8", "MIN_ST8", "MAX_ST8"],
-#     "for-sr": ["MEAN_AT", "MIN_AT", "AVG_AT", "MAX_AT", "AVG_REL_HUMIDITY", "MIN_REL_HUMIDITY",
-#          "MAX_REL_HUMIDITY", "AVG_DEWPT", "MIN_DEWPT", "MAX_DEWPT", "P_INCHES", "WS_MPH", "MAX_WS_MPH",
-#          "LW_UNITY", "ETO", "ETR", "ST8", "MIN_ST8", "MAX_ST8"]
-# }
-# print(f"The exclusions")
-# for key in feature_combinations.keys():
-#     for l in lengths:
-#         print(f"For length: {l}")
-#         evaluate_imputation(models, mse_folder, exclude_key=key, exclude_features=feature_combinations[key], length=l, trials=1)
-#         evaluate_imputation(models, mse_folder, exclude_key=key, exclude_features=feature_combinations[key], length=l, trials=20)
-        # evaluate_imputation_data(models, exclude_key=key, exclude_features=feature_combinations[key], length=l)
-# forward_evaluation(models, filename, features)
-
-# input_file = "ColdHardiness_Grape_Merlot_2.csv"
-
-# cross_validate(input_file, config_dict_csdi, config_dict_diffsaits, seed=10)
