@@ -8,12 +8,8 @@ from json import JSONEncoder
 import os
 from datasets.dataset_synth import get_testloader_synth
 from datasets.dataset_agaid import get_testloader_agaid
+from datasets.dataset_nasce import get_testloader_nasce
 import matplotlib.pyplot as plt
-# from datasets.dataset_awn import get_testloader_AWN
-
-
-from models.sadi_wrapper import SADI_Agaid, SADI_AWN
-from pypots.imputation import SAITS
 import math
 import sys
 import time
@@ -367,6 +363,8 @@ def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, 
             test_loader = get_testloader_synth(n_steps=100, n_features=6, batch_size=batch_size, num_seasons=16, seed=(s + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, v2='v7', noise=noise, mean=mean, std=std, partial_bm_config=partial_bm_config)
         elif dataset_name == 'synth_v8':
             test_loader = get_testloader_synth(n_steps=100, n_features=3, batch_size=batch_size, num_seasons=16, seed=(s + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecasting=forecasting, v2='v9', noise=noise, mean=mean, std=std, partial_bm_config=partial_bm_config)
+        elif dataset_name == 'nasce':
+            test_loader = get_testloader_nasce(filename[0], filename[1], n_steps=n_steps, batch_size=batch_size, missing_ratio=missing_ratio, seed=(s + trial), length=length, forecasting=forecasting, random_trial=random_trial, pattern=pattern, partial_bm_config=partial_bm_config)
         else:
             test_loader = get_testloader_agaid(seed=(s + trial), length=length, missing_ratio=missing_ratio, random_trial=random_trial, forecastig=forecasting, batch_size=batch_size, test_idx=test_indices, mean=mean, std=std, pattern=pattern, partial_bm_config=partial_bm_config)
 
