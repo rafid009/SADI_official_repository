@@ -110,12 +110,12 @@ train(
 )
 nsample = 50
 # model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
-print(f"DiffSAITS params: {get_num_params(model_sadi)}")
+print(f"SADI params: {get_num_params(model_sadi)}")
 
 
 config_dict_sadi_pbm = {
     'train': {
-        'epochs': 9000,
+        'epochs': 2000,
         'batch_size': 16 ,
         'lr': 1.0e-4
     },      
