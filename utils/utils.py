@@ -383,7 +383,7 @@ def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, 
 
         csdi_crps_avg = 0
         sadi_crps_avg = 0
-
+        total_batch = 0
         with tqdm(test_loader, mininterval=5.0, maxinterval=50.0) as it:
             for j, test_batch in enumerate(it, start=1):
                 if 'CSDI' in models.keys():
@@ -600,43 +600,45 @@ def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, 
                         rmse_brits = ((torch.tensor(brits_output, device=device) - c_target) * eval_points) ** 2
                         rmse_brits = rmse_brits.sum().item() / eval_points.sum().item()
                         brits_rmse_avg += rmse_brits
+                total_batch += 1
+                
         if not data:
             if 'CSDI' in models.keys():
-                results_trials_mse['csdi'][trial] = csdi_rmse_avg / batch_size
-                results_mse['csdi'] += csdi_rmse_avg / batch_size
-                results_trials_mae['csdi'][trial] = csdi_mae_avg / batch_size
-                results_mae['csdi'] += csdi_mae_avg / batch_size
-                results_crps['csdi_trials'][trial] = csdi_crps_avg / batch_size
-                results_crps['csdi'] += csdi_crps_avg / batch_size
+                results_trials_mse['csdi'][trial] = csdi_rmse_avg / total_batch
+                results_mse['csdi'] += csdi_rmse_avg / total_batch
+                results_trials_mae['csdi'][trial] = csdi_mae_avg / total_batch
+                results_mae['csdi'] += csdi_mae_avg / total_batch
+                results_crps['csdi_trials'][trial] = csdi_crps_avg / total_batch
+                results_crps['csdi'] += csdi_crps_avg / total_batch
 
             if 'SADI' in models.keys():
-                results_trials_mse['sadi'][trial] = sadi_rmse_avg / batch_size
-                results_mse['sadi'] += sadi_rmse_avg / batch_size
-                results_mse['sadi_median'] += sadi_median_avg / batch_size
-                results_mse['sadi_mean_med'] += sadi_mean_med_avg / batch_size
-                results_trials_mae['sadi'][trial] = sadi_mae_avg / batch_size
-                results_mae['sadi'] += sadi_mae_avg / batch_size
-                results_crps['sadi_trials'][trial] = sadi_crps_avg / batch_size
-                results_crps['sadi'] += sadi_crps_avg / batch_size
+                results_trials_mse['sadi'][trial] = sadi_rmse_avg / total_batch
+                results_mse['sadi'] += sadi_rmse_avg / total_batch
+                results_mse['sadi_median'] += sadi_median_avg / total_batch
+                results_mse['sadi_mean_med'] += sadi_mean_med_avg / total_batch
+                results_trials_mae['sadi'][trial] = sadi_mae_avg / total_batch
+                results_mae['sadi'] += sadi_mae_avg / total_batch
+                results_crps['sadi_trials'][trial] = sadi_crps_avg / total_batch
+                results_crps['sadi'] += sadi_crps_avg / total_batch
                 
 
             if 'SAITS' in models.keys():
-                results_trials_mse['saits'][trial] = saits_rmse_avg / batch_size
+                results_trials_mse['saits'][trial] = saits_rmse_avg / total_batch
                 results_mse['saits'] += saits_rmse_avg / batch_size
                 results_trials_mae['saits'][trial] = saits_mae_avg / batch_size
-                results_mae['saits'] += saits_mae_avg / batch_size
+                results_mae['saits'] += saits_mae_avg / total_batch
      
             if 'KNN' in models.keys():
-                results_trials_mse['knn'][trial] = knn_rmse_avg / batch_size
-                results_mse['knn'] += knn_rmse_avg / batch_size
+                results_trials_mse['knn'][trial] = knn_rmse_avg / total_batch
+                results_mse['knn'] += knn_rmse_avg / total_batch
             
             if 'MICE' in models.keys():
-                results_trials_mse['mice'][trial] = mice_rmse_avg / batch_size
-                results_mse['mice'] += mice_rmse_avg / batch_size
+                results_trials_mse['mice'][trial] = mice_rmse_avg / total_batch
+                results_mse['mice'] += mice_rmse_avg / total_batch
 
             if 'BRITS' in models.keys():
-                results_trials_mse['brits'][trial] = brits_rmse_avg / batch_size
-                results_mse['brits'] += brits_rmse_avg / batch_size
+                results_trials_mse['brits'][trial] = brits_rmse_avg / total_batch
+                results_mse['brits'] += brits_rmse_avg / total_batch
     
     if not os.path.isdir(mse_folder):
         os.makedirs(mse_folder)
