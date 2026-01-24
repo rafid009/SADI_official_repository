@@ -276,7 +276,7 @@ class SWaT_Dataset(Dataset):
 
 def get_dataloader(mean_std_file, n_features, batch_size=16, missing_ratio=0.2, is_test=False):
     np.random.seed(seed=100)
-    input_folder = '../anomaly_detection_stuff/SWaT'
+    input_folder = './data/swat'
     normal_data = np.load(f"{input_folder}/SWaT_minute_segments_normal.npy")
     train_data = normal_data[:int(0.8 * normal_data.shape[0])]
     test_data = normal_data[int(0.8 * normal_data.shape[0]):]
@@ -295,7 +295,7 @@ def get_dataloader(mean_std_file, n_features, batch_size=16, missing_ratio=0.2, 
 
 def get_testloader_swat(total_stations, mean_std_file, n_features, n_steps=366, batch_size=16, missing_ratio=0.2, seed=10):
     np.random.seed(seed=seed)
-    input_folder = '../anomaly_detection_stuff/SWaT'
+    input_folder = './data/swat'
     data = np.load(f"{input_folder}/SWaT_minute_segments.npy")
     test_dataset = SWaT_Dataset(total_stations, mean_std_file, n_features, rate=missing_ratio)
     test_loader = DataLoader(test_dataset, batch_size=batch_size)
