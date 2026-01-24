@@ -1,4 +1,4 @@
-# SADI: Self-Attention-based Diffusion Model for Time-Series Imputation
+# SADI: Self-Attention-based Diffusion Model for Time-Series Imputation in Partial Blackout Scenarios.
 
 This repository contains the implementation of **SADI (Self-Attention-based Diffusion Model for Time-Series Imputation)**, a state-of-the-art model designed to handle missing data in multivariate time-series datasets. SADI leverages feature and temporal correlations to provide high-quality imputation, outperforming existing models in both accuracy and efficiency.
 
