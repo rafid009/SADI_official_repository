@@ -280,14 +280,14 @@ class SADI_base(nn.Module):
         temp_mask = cond_mask.unsqueeze(dim=1)
         
         total_mask = torch.cat([temp_mask, (1 - temp_mask)], dim=1)
-        print(f"total_input: {total_input}\n")
+        # print(f"total_input: {total_input}\n")
         inputs = {
             'X': total_input,
             'missing_mask': total_mask
         }
 
         predicted_1, predicted_2, predicted_3 = self.diffmodel(inputs, t)
-        print(f"predicted3: {predicted_3}\n")
+        # print(f"predicted3: {predicted_3}\n")
         residual_3 = (noise - predicted_3) * target_mask
         
         if is_train != 0 and (predicted_1 is not None) and (predicted_2 is not None):
@@ -655,7 +655,7 @@ class SADI_SWaT(SADI_base):
 
     def process_data(self, batch):
         observed_data = batch["observed_data"].to(self.device).float()
-        print(f"observed data process: {torch.isnan(observed_data).sum()}\n\n{observed_data}\n\n")
+        # print(f"observed data process: {torch.isnan(observed_data).sum()}\n\n{observed_data}\n\n")
         observed_mask = batch["observed_mask"].to(self.device).float()
         # observed_tp = batch["timepoints"].to(self.device).float()
         gt_mask = batch["gt_mask"].to(self.device).float()

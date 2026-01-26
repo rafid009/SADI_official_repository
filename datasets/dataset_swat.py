@@ -230,9 +230,11 @@ class SWaT_Dataset(Dataset):
             train_X = X.copy()
             train_X = train_X.reshape((-1, X.shape[2]))
             self.mean = np.nanmean(train_X, axis=0)
+            print(f"mean: {self.mean}")
             np.save(f"{mean_std_file}_mean.npy", self.mean)
 
             self.std = np.nanstd(train_X, axis=0)
+            print(f"std: {self.std}")
             np.save(f"{mean_std_file}_std.npy", self.std)
 
 
@@ -261,7 +263,7 @@ class SWaT_Dataset(Dataset):
            
         
     def __getitem__(self, index):
-        print(f"obs data get item: {torch.isnan(self.observed_values[index]).sum()}\n\n")
+        # print(f"obs data get item: {torch.isnan(self.observed_values[index]).sum()}\n\n")
         s = {
             "observed_data": self.observed_values[index].reshape(self.observed_values[index].shape[0], -1),
             "observed_mask": self.observed_masks[index].reshape(self.observed_masks[index].shape[0], -1),
