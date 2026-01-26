@@ -261,6 +261,7 @@ class SWaT_Dataset(Dataset):
            
         
     def __getitem__(self, index):
+        print(f"obs data get item: {torch.isnan(self.observed_values[index]).sum()}\n\n")
         s = {
             "observed_data": self.observed_values[index].reshape(self.observed_values[index].shape[0], -1),
             "observed_mask": self.observed_masks[index].reshape(self.observed_masks[index].shape[0], -1),
@@ -280,7 +281,7 @@ def get_dataloader(mean_std_file, n_features, batch_size=16, missing_ratio=0.2, 
     normal_data = np.load(f"{input_folder}/SWaT_minute_segments_normal.npy")
     train_data = normal_data[:int(0.8 * normal_data.shape[0])]
     test_data = normal_data[int(0.8 * normal_data.shape[0]):]
-    train_dataset = SWaT_Dataset(train_data, mean_std_file, n_features, rate=0.2)
+    train_dataset = SWaT_Dataset(train_data, mean_std_file, n_features, rate=0.0001)
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
     test_dataset = SWaT_Dataset(test_data, mean_std_file, n_features, rate=missing_ratio, is_valid=True)
