@@ -230,11 +230,14 @@ class SWaT_Dataset(Dataset):
             train_X = X.copy()
             train_X = train_X.reshape((-1, X.shape[2]))
             self.mean = np.nanmean(train_X, axis=0)
-            print(f"mean: {self.mean}")
+            # print(f"mean: {self.mean}")
             np.save(f"{mean_std_file}_mean.npy", self.mean)
 
             self.std = np.nanstd(train_X, axis=0)
-            print(f"std: {self.std}")
+            for i in range(len(self.std)):
+                if self.std[i] == 0:
+                    self.std[i] = 1
+            # print(f"std: {self.std}")
             np.save(f"{mean_std_file}_std.npy", self.std)
 
 
