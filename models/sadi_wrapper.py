@@ -280,13 +280,14 @@ class SADI_base(nn.Module):
         temp_mask = cond_mask.unsqueeze(dim=1)
         
         total_mask = torch.cat([temp_mask, (1 - temp_mask)], dim=1)
+        print(f"total_input: {total_input}\n")
         inputs = {
             'X': total_input,
             'missing_mask': total_mask
         }
 
         predicted_1, predicted_2, predicted_3 = self.diffmodel(inputs, t)
-        # print(f"predicted3: {predicted_3}\n")
+        print(f"predicted3: {predicted_3}\n")
         residual_3 = (noise - predicted_3) * target_mask
         
         if is_train != 0 and (predicted_1 is not None) and (predicted_2 is not None):
