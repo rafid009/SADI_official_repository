@@ -243,7 +243,7 @@ class SWaT_Dataset(Dataset):
             
                 
             obs_val, obs_mask, mask = parse_data(X[i], rate)
-
+            print(f"obs_val: {obs_val}\n\n")
             self.observed_values.append(obs_val)
             
             
@@ -256,7 +256,7 @@ class SWaT_Dataset(Dataset):
         if is_test or is_valid:
             self.gt_masks = torch.tensor(np.array(self.gt_masks), dtype=torch.float32)
         
-        self.neighbor_location = None #"./data/nacse/neighbors.json"
+        # self.neighbor_location = None #"./data/nacse/neighbors.json"
 
            
         
