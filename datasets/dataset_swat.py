@@ -243,7 +243,6 @@ class SWaT_Dataset(Dataset):
             
                 
             obs_val, obs_mask, mask = parse_data(X[i], rate)
-            print(f"obs_val: {obs_val}\n\n")
             self.observed_values.append(obs_val)
             
             

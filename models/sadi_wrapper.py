@@ -321,6 +321,7 @@ class SADI_base(nn.Module):
         Example:
             diff_input = model.set_input_to_diffmodel(noisy_data, observed_data, cond_mask)
         """
+        print(f"observed_data: {observed_data}\n")
         cond_obs = (cond_mask * observed_data).unsqueeze(1)
         noisy_target = ((1 - cond_mask) * noisy_data).unsqueeze(1)
         total_input = torch.cat([cond_obs, noisy_target], dim=1)  # (B,2,K,L)
