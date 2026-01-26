@@ -655,7 +655,7 @@ class SADI_SWaT(SADI_base):
 
     def process_data(self, batch):
         observed_data = batch["observed_data"].to(self.device).float()
-        print(f"observed data process: {torch.isnan(observed_data)}\n\n{observed_data}\n\n")
+        print(f"observed data process: {torch.isnan(observed_data).sum()}\n\n{observed_data}\n\n")
         observed_mask = batch["observed_mask"].to(self.device).float()
         # observed_tp = batch["timepoints"].to(self.device).float()
         gt_mask = batch["gt_mask"].to(self.device).float()
