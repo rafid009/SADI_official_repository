@@ -248,8 +248,9 @@ class SWaT_Dataset(Dataset):
             
             self.observed_masks.append(obs_mask)
             self.gt_masks.append(mask)
- 
+       
         self.observed_values = torch.tensor(np.array(self.observed_values), dtype=torch.float32)
+        print(f"obs_values nan: {torch.isnan(self.observed_values).sum()}")
         self.observed_masks = torch.tensor(np.array(self.observed_masks), dtype=torch.float32)
         self.observed_values = ((self.observed_values.reshape(self.observed_values.shape[0], L, -1) - self.mean) / self.std) * self.observed_masks.reshape(self.observed_masks.shape[0], L, -1)
         if is_test or is_valid:
