@@ -250,7 +250,7 @@ class SWaT_Dataset(Dataset):
         for i in tqdm(range(X.shape[0])):
             
                 
-            obs_val, obs_mask, mask = parse_data(X[i], rate, test_mask=test_mask)
+            obs_val, obs_mask, mask = parse_data(X[i], rate, test_mask=test_mask[i] if test_mask is not None else None)
             self.observed_values.append(obs_val)
             
             
