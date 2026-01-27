@@ -317,6 +317,9 @@ def evaluate_anomalies(model, data_folder, test_loader_1, test_loader_2, test_la
     model.eval()
     nsample = 50
     test_enumerator_2 = enumerate(test_loader_2)
+    mse_total = 0
+    mae_total = 0
+    evalpoints_total = 0
     with tqdm(test_loader_1, mininterval=5.0, maxinterval=50.0) as it:
         for batch_no, test_batch in enumerate(it, start=1):
             output_sadi_1 = model.evaluate(test_batch, nsample)
