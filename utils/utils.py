@@ -327,7 +327,7 @@ def evaluate_anomalies(model, data_folder, test_loader_1, test_loader_2, test_la
             observed_points = observed_points.permute(0, 2, 1)
             samples_sadi_mean_1 = samples_sadi_1.mean(dim=1)
 
-            output_sadi_2 = model.evaluate(next(test_enumerator_2), nsample)
+            output_sadi_2 = model.evaluate(next(test_enumerator_2)[1], nsample)
             samples_sadi_2 = output_sadi_2[0]
             eval_points_2 = output_sadi_2[2]
 
