@@ -1,5 +1,5 @@
 from models.sadi_wrapper import SADI_SWaT
-from utils.utils import train, get_num_params, evaluate_imputation_all
+from utils.utils import train, evaluate_anomalies
 import numpy as np
 import torch
 import sys
@@ -8,7 +8,7 @@ import os
 # import matplotlib.pyplot as plt
 import matplotlib
 # import pickle
-from datasets.dataset_swat import get_dataloader
+from datasets.dataset_swat import get_dataloader, get_testloader_swat
 # import json
 from json import JSONEncoder
 # import math
@@ -111,17 +111,28 @@ model_sadi = SADI_SWaT(config_dict_sadi, device, target_dim=n_features).to(devic
 filename = f"model_sadi_{name}.pth"
 print(f"\n\DiffSAITS training starts.....\n")
 
-# model_diff_saits.load_state_dict(torch.load(f"{model_folder}/{filename}"))
+model_sadi.load_state_dict(torch.load(f"{model_folder}/{filename}"))
 # #
-train(
-    model_sadi,
-    config_dict_sadi["train"],
-    train_loader,
-    valid_loader=valid_loader,
-    foldername=model_folder,
-    filename=f"{filename}",
-    is_saits=True
-)
+# train(
+#     model_sadi,
+#     config_dict_sadi["train"],
+#     train_loader,
+#     valid_loader=valid_loader,
+#     foldername=model_folder,
+#     filename=f"{filename}",
+#     is_saits=True
+# )
 
+data_folder = './results/swat/'
+
+test_loader_1, test_loader_2 = get_testloader_swat(mean_std_file, n_features=1, batch_size=16, missing_ratio=0.5)
+
+evaluate_anomalies(
+    model_sadi,
+    data_folder,
+    test_loader_1=test_loader_1,
+    test_loader_2=test_loader_2,
+    test_labels_file=f'./data/swat/SWaT_minute_segments_anomaly_labels.npy'
+)
 
 

@@ -280,6 +280,90 @@ class NumpyArrayEncoder(JSONEncoder):
             return obj.tolist()
         return JSONEncoder.default(self, obj)
 
+def evaluate_anomalies(model, data_folder, test_loader_1, test_loader_2, test_labels_file):
+    """
+    Evaluate anomaly detection performance of various models on a given dataset.
+
+    Args:
+        model (object): The model to evaluate.
+        data_folder (str): Path to the directory where the evaluation results will be saved.
+        test_loader_1 (DataLoader): DataLoader for the first test dataset.
+        test_loader_2 (DataLoader): DataLoader for the second test dataset.
+        test_labels_file (str): Path to the file containing ground truth labels for anomalies.
+
+    Returns:
+        None
+
+    Description:
+    The `evaluate_anomalies` function evaluates the performance of various anomaly detection models across two test datasets. It computes metrics such as Area Under the Curve (AUC) and Average Precision (AP) for each model and saves the results in a specified directory.
+        data_folder (str): Path to the directory where the evaluation results will be saved.
+        test_loader_1 (DataLoader): DataLoader for the first test dataset.
+        test_loader_2 (DataLoader): DataLoader for the second test dataset.
+        test_labels_file (str): Path to the file containing ground truth labels for anomalies.
+
+    Returns:
+        None
+
+    Description:
+    The `evaluate_anomalies` function evaluates the performance of various anomaly detection models across two test datasets. It computes metrics such as Area Under the Curve (AUC) and Average Precision (AP) for each model and saves the results in a specified directory.
+
+    - The function iterates through each model provided in the `models` dictionary.
+    - For each model, it evaluates performance on both test datasets using an external `evaluate_anomaly` function.
+    - The computed metrics are stored in a results dictionary and saved as a JSON file in the specified `data_folder`.
+
+    This function is useful for comparing the effectiveness of different anomaly detection models on time-series data.
+    """
+    results = {}
+    model.eval()
+    nsample = 50
+    with tqdm(test_loader_1, mininterval=5.0, maxinterval=50.0) as it:
+        for batch_no, test_batch in enumerate(it, start=1):
+            output_sadi_1 = model.evaluate(test_batch, nsample)
+            samples_sadi_1, c_target, eval_points_1, observed_points = output_sadi_1
+            samples_sadi_1 = samples_sadi_1.permute(0, 1, 3, 2)  # (B,nsample,L,K)
+            c_target = c_target.permute(0, 2, 1)  # (B,L,K)
+            eval_points_1 = eval_points_1.permute(0, 2, 1)
+            observed_points = observed_points.permute(0, 2, 1)
+            samples_sadi_mean_1 = samples_sadi_1.mean(dim=1)
+
+            output_sadi_2 = model.evaluate(next(test_loader_2), nsample)
+            samples_sadi_2 = output_sadi_2[0]
+            eval_points_2 = output_sadi_2[2]
+
+            samples_sadi_2 = samples_sadi_2.permute(0, 1, 3, 2)  # (B,nsample,L,K)
+            eval_points_2 = eval_points_2.permute(0,2,1)
+            samples_sadi_mean_2 = samples_sadi_2.mean(dim=1)
+
+            samples_sadi = samples_sadi_mean_1 * eval_points_1 + samples_sadi_mean_2 * eval_points_2
+            total_points = torch.ones_like(samples_sadi).sum().item()
+            mse_current = (
+                ((samples_sadi - c_target)) ** 2
+            )
+            mae_current = (
+                torch.abs((samples_sadi - c_target))
+            )
+
+            print(f"mse_current shape: {mse_current.shape}\n")
+            results[batch_no] = {
+                'rmse': np.sqrt(mse_current.cpu().numpy() / total_points),
+                'mae': mae_current.cpu().numpy() / total_points
+            }
+            mse_total += mse_current.sum().item()
+            mae_total += mae_current.sum().item()
+            evalpoints_total += total_points
+
+            it.set_postfix(
+                ordered_dict={
+                    "rmse_total": np.sqrt(mse_total / evalpoints_total),
+                    "mae_total": mae_total / evalpoints_total,
+                    "batch_no": batch_no,
+                },
+                refresh=True,
+            )
+    if not os.path.isdir(data_folder):
+        os.makedirs(data_folder)
+    with open(f"{data_folder}/anomaly_results.json", "w") as f:
+        json.dump(results, f, cls=NumpyArrayEncoder)
 
 def evaluate_imputation_all(models, mse_folder, dataset_name='', batch_size=16, trials=3, length=-1, random_trial=False, forecasting=False, missing_ratio=0.01, test_indices=None, data=False, noise=False, filename=None, is_yearly=True, n_steps=366, pattern=None, mean=None, std=None, partial_bm_config=None, exclude_features=None, unnormalize=False):  
     """

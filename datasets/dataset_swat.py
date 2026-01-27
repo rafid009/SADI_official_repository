@@ -18,7 +18,7 @@ def dynamic_sensor_selection(X_train, X_loc, rate=0.5, L=30, K=2):
     return X_train, X_loc
 
 
-def parse_data(sample, rate=0.2):
+def parse_data(sample, rate=0.2, test_mask=None):
     """Get mask of random points (missing at random) across channels based on k,
     where k == number of data points. Mask of sample's shape where 0's to be imputed, and 1's to preserved
     as per ts imputers"""
@@ -29,12 +29,15 @@ def parse_data(sample, rate=0.2):
     # if not is_test:
     shp = sample.shape
     evals = sample.reshape(-1).copy()
-    indices = np.where(~np.isnan(evals))[0].tolist()
-    indices = np.random.choice(indices, int(len(indices) * rate))
-    values = evals.copy()
-    values[indices] = np.nan
-    mask = ~np.isnan(values)
-    mask = mask.reshape(shp)
+    if test_mask is not None:
+        mask = test_mask
+    else:
+        indices = np.where(~np.isnan(evals))[0].tolist()
+        indices = np.random.choice(indices, int(len(indices) * rate))
+        values = evals.copy()
+        values[indices] = np.nan
+        mask = ~np.isnan(values)
+        mask = mask.reshape(shp)
     # gt_intact = values.reshape(shp).copy()
     obs_data = np.nan_to_num(evals, copy=True)
     obs_data = obs_data.reshape(shp)
@@ -196,7 +199,7 @@ def haversine(lat1, lon1, lat2, lon2):
     return 2 * R * math.asin(math.sqrt(a))
 
 class SWaT_Dataset(Dataset):
-    def __init__(self, data, mean_std_file, n_features, rate=0.2, is_test=False, is_valid=False) -> None:
+    def __init__(self, data, mean_std_file, n_features, rate=0.2, is_test=False, is_valid=False, test_mask=None) -> None:
         super().__init__()
         
         self.observed_values = []
@@ -247,7 +250,7 @@ class SWaT_Dataset(Dataset):
         for i in tqdm(range(X.shape[0])):
             
                 
-            obs_val, obs_mask, mask = parse_data(X[i], rate)
+            obs_val, obs_mask, mask = parse_data(X[i], rate, test_mask=test_mask)
             self.observed_values.append(obs_val)
             
             
@@ -299,10 +302,25 @@ def get_dataloader(mean_std_file, n_features, batch_size=16, missing_ratio=0.2, 
     return train_loader, test_loader
 
 
-def get_testloader_swat(total_stations, mean_std_file, n_features, n_steps=366, batch_size=16, missing_ratio=0.2, seed=10):
+def get_testloader_swat(mean_std_file, n_features, n_steps=60, batch_size=16, missing_ratio=0.5, seed=10):
     np.random.seed(seed=seed)
     input_folder = './data/swat'
-    data = np.load(f"{input_folder}/SWaT_minute_segments.npy")
-    test_dataset = SWaT_Dataset(total_stations, mean_std_file, n_features, rate=missing_ratio)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size)
-    return test_loader
+    data = np.load(f"{input_folder}/SWaT_minute_segments_anomaly.npy")
+    
+    shp = data.shape
+    evals = data.reshape(-1)
+    indices = np.where(~np.isnan(evals))[0].tolist()
+    indices = np.random.choice(indices, int(len(indices) * missing_ratio))
+    values = evals.copy()
+    values[indices] = np.nan
+    mask = ~np.isnan(values)
+    mask = mask.reshape(shp)
+
+    inverse_mask = ~mask
+
+    test_dataset_1 = SWaT_Dataset(data, mean_std_file, n_features, rate=missing_ratio, is_test=True, test_mask=mask)
+    test_loader_1 = DataLoader(test_dataset_1, batch_size=batch_size, shuffle=False)
+
+    test_dataset_2 = SWaT_Dataset(data, mean_std_file, n_features, rate=missing_ratio, is_test=True, test_mask=inverse_mask)
+    test_loader_2 = DataLoader(test_dataset_2, batch_size=batch_size, shuffle=False)
+    return test_loader_1, test_loader_2
