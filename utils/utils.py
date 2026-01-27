@@ -347,10 +347,10 @@ def evaluate_anomalies(model, data_folder, test_loader_1, test_loader_2, test_la
                 torch.abs((samples_sadi - c_target))
             )
 
-            print(f"mse_current shape: {mse_current.shape}\n")
+            print(f"mse_current shape: {mse_current.mean(dim=-1).shape}\n")
             results[batch_no] = {
-                'rmse': np.sqrt(mse_current.cpu().numpy() / total_points),
-                'mae': mae_current.cpu().numpy() / total_points
+                'mse': mse_current.mean(dim=-1).cpu().numpy(),
+                'mae': mae_current.mean(dim=-1).cpu().numpy()
             }
             mse_total += mse_current.sum().item()
             mae_total += mae_current.sum().item()
