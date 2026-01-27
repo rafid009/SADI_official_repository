@@ -274,7 +274,7 @@ class SADI_base(nn.Module):
         noise = torch.randn_like(observed_data)
         noisy_data = (current_alpha ** 0.5) * observed_data + ((1.0 - current_alpha) ** 0.5) * noise
         total_input = self.set_input_to_diffmodel(noisy_data, observed_data, cond_mask)
-        print(f"observed_mask: {observed_mask.shape}, cond_mask: {cond_mask.shape}\n")
+        # print(f"observed_mask: {observed_mask.shape}, cond_mask: {cond_mask.shape}\n")
         target_mask = observed_mask - cond_mask
         num_eval = target_mask.sum()
 
@@ -517,6 +517,7 @@ class SADI_base(nn.Module):
 
         with torch.no_grad():
             cond_mask = gt_mask
+            print(f"observed_mask: {observed_mask.shape}, cond_mask: {cond_mask.shape}\n")
             target_mask = observed_mask - cond_mask
             samples = self.impute(observed_data, cond_mask, n_samples)
 
