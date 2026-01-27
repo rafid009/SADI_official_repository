@@ -352,6 +352,9 @@ def evaluate_anomalies(model, data_folder, test_loader_1, test_loader_2, test_la
                 'mse': mse_current.mean(dim=-1).cpu().numpy(),
                 'mae': mae_current.mean(dim=-1).cpu().numpy()
             }
+            mse_current_mean = mse_current.sum().item() / total_points
+            mae_current_mean = mae_current.sum().item() / total_points
+            print(f"Batch {batch_no}: MSE = {mse_current_mean}, MAE = {mae_current_mean}\n")
             mse_total += mse_current.sum().item()
             mae_total += mae_current.sum().item()
             evalpoints_total += total_points
