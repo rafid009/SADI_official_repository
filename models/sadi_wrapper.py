@@ -517,7 +517,7 @@ class SADI_base(nn.Module):
 
         with torch.no_grad():
             cond_mask = gt_mask
-            print(f"observed_mask: {observed_mask.shape}, cond_mask: {cond_mask.shape}\n")
+            # print(f"observed_mask: {observed_mask.shape}, cond_mask: {cond_mask.shape}\n")
             target_mask = observed_mask - cond_mask
             samples = self.impute(observed_data, cond_mask, n_samples)
 

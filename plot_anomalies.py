@@ -16,7 +16,7 @@ results_mse = []
 with open(anomaly_results_file, 'r') as f:
     anomaly_results = json.load(f, cls=NumpyArrayDecoder)
 length = len(anomaly_results.keys())
-for i in range(length):
+for i in range(1, length+1):
     result = anomaly_results[str(i)]
     results_mse.append(result['mse'])
 results_mse = np.concatenate(results_mse, axis=0)
