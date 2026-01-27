@@ -306,15 +306,17 @@ def get_testloader_swat(mean_std_file, n_features, n_steps=60, batch_size=16, mi
     np.random.seed(seed=seed)
     input_folder = './data/swat'
     data = np.load(f"{input_folder}/SWaT_minute_segments_anomaly.npy")
-    
-    shp = data.shape
-    evals = data.reshape(-1)
-    indices = np.where(~np.isnan(evals))[0].tolist()
-    indices = np.random.choice(indices, int(len(indices) * missing_ratio))
-    values = evals.copy()
-    values[indices] = np.nan
-    mask = ~np.isnan(values)
-    mask = mask.reshape(shp)
+    mask = np.zeros(data.shape)
+    for i in range(data.shape[0]):
+
+        shp = data[i].shape
+        evals = data[i].reshape(-1)
+        indices = np.where(~np.isnan(evals))[0].tolist()
+        indices = np.random.choice(indices, int(len(indices) * missing_ratio))
+        values = evals.copy()
+        values[indices] = np.nan
+        temp_mask = ~np.isnan(values)
+        mask[i] = temp_mask.reshape(shp)
 
     inverse_mask = ~mask
 
