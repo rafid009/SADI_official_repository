@@ -318,7 +318,7 @@ def get_testloader_swat(mean_std_file, n_features, n_steps=60, batch_size=16, mi
         temp_mask = ~np.isnan(values)
         mask[i] = temp_mask.reshape(shp)
 
-    inverse_mask = ~mask
+    inverse_mask = 1 - mask
 
     test_dataset_1 = SWaT_Dataset(data, mean_std_file, n_features, rate=missing_ratio, is_test=True, test_mask=mask)
     test_loader_1 = DataLoader(test_dataset_1, batch_size=batch_size, shuffle=False)
